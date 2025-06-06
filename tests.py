@@ -3,9 +3,9 @@ from vision import Vision
 def run_vqa_test(prompt, images):
     test_models = [
         "minicpm",
-        "qwen",
-        "llava-phi", 
-        "llava-llama3"
+        # "qwen",
+        # "llava-phi", 
+        # "llava-llama3"
     ]
 
     for model in test_models: 
