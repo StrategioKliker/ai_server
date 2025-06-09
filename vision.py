@@ -2,6 +2,7 @@ import base64
 import requests
 import json
 from datetime import datetime
+import os
 
 class ImageInference: 
     def __init__(self, model):
@@ -19,7 +20,7 @@ class ImageInference:
             raise Exception("Provided model not in available model list")
 
         self._model = available_models[model]
-        self._ollama_url = 'http://localhost:11434/api/generate'
+        self._ollama_url = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 
         self.elapsed_minutes = 0
         

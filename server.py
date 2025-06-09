@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from typing import List, Optional, Any, Dict 
 from pydantic import BaseModel
@@ -6,7 +7,7 @@ from rq import Queue
 from redis import Redis
 
 app = FastAPI()
-redis_conn = Redis()
+redis_conn = Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"))
 queue = Queue(connection=redis_conn)
 
 class VisionTaskRequest(BaseModel):

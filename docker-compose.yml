@@ -1,0 +1,56 @@
+
+services: 
+  redis: 
+    image: redis:7-bookworm
+    volumes: 
+      - redis_data:/data 
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 1s 
+      retries: 5
+
+  ollama: 
+    image: ollama/ollama:latest
+    privileged: true 
+    ports: 
+      - "11435:11435"
+    volumes: 
+      - ./ollama:/root/.ollama
+    entrypoint: >
+      sh -c "ollama serve & sleep 3 && ollama pull minicpm-v && wait"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  app: 
+    build: .
+    command: uv run uvicorn server:app --host 0.0.0.0 --port 8000
+    ports: 
+      - "8000:8000"
+    environment: 
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_URL=http://ollama:11435/api/generate 
+    depends_on: 
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+  worker: 
+    build: .
+    command: uv run python worker.py 
+    environment: 
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_URL=http://ollama:11435/api/generate
+    depends_on: 
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+volumes: 
+  redis_data:
