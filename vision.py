@@ -3,16 +3,16 @@ import requests
 import json
 from datetime import datetime
 
-class Vision: 
+class ImageInference: 
     def __init__(self, model):
         # NOTE -> Top performers are qwen and minicpm 
         available_models = {
-            "granite": "granite3.2-vision",
-            "qwen": "qwen2.5vl",
+            # "granite": "granite3.2-vision",
+            # "qwen": "qwen2.5vl",
             "minicpm": "minicpm-v",
-            "llava": "llava",
-            "llava-phi": "llava-phi3",
-            "llava-llama3": "llava-llama3",
+            # "llava": "llava",
+            # "llava-phi": "llava-phi3",
+            # "llava-llama3": "llava-llama3",
         }
         
         if model not in available_models:
@@ -38,7 +38,7 @@ class Vision:
 
         return encoded_images
             
-    def ask(self, prompt, images):
+    def prompt(self, prompt, images):
         payload = {
             "model": self._model,
             "prompt": prompt,
