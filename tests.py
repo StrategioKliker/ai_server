@@ -1,4 +1,4 @@
-from vision import Vision
+from vision import ImageInference
 
 def run_vqa_test(prompt, images):
     test_models = [
@@ -9,7 +9,7 @@ def run_vqa_test(prompt, images):
     ]
 
     for model in test_models: 
-        vision = Vision(model)
+        vision = ImageInference(model)
 
         anwser = vision.ask(prompt=prompt, images=images)
         print(f"Model: {model} anwsered: ", anwser)

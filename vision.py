@@ -40,6 +40,8 @@ class ImageInference:
         return encoded_images
             
     def prompt(self, prompt, images):
+        prompt = "Respond in English. " + prompt
+        
         payload = {
             "model": self._model,
             "prompt": prompt,
