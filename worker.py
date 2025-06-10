@@ -1,15 +1,23 @@
 import os
+from time import sleep
 import traceback
+import redis.exceptions
 from rq import Worker, Queue
-import redis
+from redis import Redis
+from redis.exceptions import ConnectionError
 
 listen = ['default']
 redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
-conn = redis.from_url(redis_url)
 
 if __name__ == '__main__':
-    queue = Queue('default', connection=conn)
-    worker = Worker([queue], connection=conn)
-    worker.work()
+    while True: 
+        try: 
+            conn = Redis.from_url(redis_url, socket_timeout=None, retry_on_timeout=True)
+            queue = Queue('default', connection=conn)
+            worker = Worker([queue], connection=conn)
+            worker.work()
+        except ConnectionError as e: 
+            print(f"[WORKER] Redis unavailable, retrying in 5s... ({e})")
+            sleep(5)
 
 
