@@ -1,0 +1,210 @@
+{
+  "id": null,
+  "uid": "appmetrics",
+  "title": "Server Metrics",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+       {
+            "id": 1,
+            "type": "timeseries",
+            "title": "Container RAM memory usage",
+            "gridPos": {
+                "x": 0,
+                "y": 0,
+                "h": 8,
+                "w": 12
+            },
+            "fieldConfig": {
+                "defaults": {
+                "custom": {
+                    "drawStyle": "line",
+                    "lineInterpolation": "linear",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "lineWidth": 1,
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "spanNulls": false,
+                    "insertNulls": false,
+                    "showPoints": "auto",
+                    "pointSize": 5,
+                    "stacking": {
+                    "mode": "none",
+                    "group": "A"
+                    },
+                    "axisPlacement": "auto",
+                    "axisLabel": "",
+                    "axisColorMode": "text",
+                    "axisBorderShow": false,
+                    "scaleDistribution": {
+                    "type": "linear"
+                    },
+                    "axisCenteredZero": false,
+                    "hideFrom": {
+                    "tooltip": false,
+                    "viz": false,
+                    "legend": false
+                    },
+                    "thresholdsStyle": {
+                    "mode": "off"
+                    }
+                },
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    },
+                    {
+                        "color": "red",
+                        "value": 80
+                    }
+                    ]
+                },
+                "unit": "bytes"
+                },
+                "overrides": []
+            },
+            "pluginVersion": "12.0.1",
+            "targets": [
+                {
+                "disableTextWrap": false,
+                "editorMode": "code",
+                "expr": "sum(container_memory_working_set_bytes) by (container)",
+                "fullMetaSearch": false,
+                "includeNullMetadata": true,
+                "legendFormat": "__auto",
+                "range": true,
+                "refId": "A",
+                "useBackend": false
+                }
+            ],
+            "datasource": {
+                "type": "prometheus",
+                "uid": "beoj0npaxqq68f"
+            },
+            "options": {
+                "tooltip": {
+                "mode": "single",
+                "sort": "none",
+                "hideZeros": false
+                },
+                "legend": {
+                "showLegend": true,
+                "displayMode": "list",
+                "placement": "bottom",
+                "calcs": []
+                }
+            }
+        },
+        {
+            "id": 2,
+            "type": "timeseries",
+            "title": "Container CPU Usage",
+            "gridPos": {
+                "x": 0,
+                "y": 8,
+                "h": 8,
+                "w": 12
+            },
+            "fieldConfig": {
+                "defaults": {
+                "custom": {
+                    "drawStyle": "line",
+                    "lineInterpolation": "linear",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "lineWidth": 1,
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "spanNulls": false,
+                    "insertNulls": false,
+                    "showPoints": "auto",
+                    "pointSize": 5,
+                    "stacking": {
+                    "mode": "none",
+                    "group": "A"
+                    },
+                    "axisPlacement": "auto",
+                    "axisLabel": "",
+                    "axisColorMode": "text",
+                    "axisBorderShow": false,
+                    "scaleDistribution": {
+                    "type": "linear"
+                    },
+                    "axisCenteredZero": false,
+                    "hideFrom": {
+                    "tooltip": false,
+                    "viz": false,
+                    "legend": false
+                    },
+                    "thresholdsStyle": {
+                    "mode": "off"
+                    }
+                },
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    },
+                    {
+                        "color": "red",
+                        "value": 80
+                    }
+                    ]
+                },
+                "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "pluginVersion": "12.0.1",
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "beoj0npaxqq68f"
+                },
+                "disableTextWrap": false,
+                "editorMode": "code",
+                "expr": "sum(rate(container_cpu_usage_seconds_total[1m])) by (container)",
+                "fullMetaSearch": false,
+                "includeNullMetadata": true,
+                "legendFormat": "__auto",
+                "range": true,
+                "refId": "Container CPU usage",
+                "useBackend": false
+                }
+            ],
+            "datasource": {
+                "type": "prometheus",
+                "uid": "beoj0npaxqq68f"
+            },
+            "options": {
+                "tooltip": {
+                "mode": "single",
+                "sort": "none",
+                "hideZeros": false
+                },
+                "legend": {
+                "showLegend": true,
+                "displayMode": "list",
+                "placement": "bottom",
+                "calcs": []
+                }
+            }
+        }
+  ]
+}
