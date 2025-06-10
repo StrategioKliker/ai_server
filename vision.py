@@ -1,8 +1,10 @@
+import os
+import json
 import base64
 import requests
-import json
 from datetime import datetime
-import os
+from typing import List, Union 
+
 
 class ImageInference: 
     def __init__(self, model):
@@ -38,10 +40,21 @@ class ImageInference:
                 exit(1)
 
         return encoded_images
+    
+    def __process_images(self, images): 
+        pass
             
-    def prompt(self, prompt, images):
-        prompt = "Respond in English. " + prompt
+    def prompt(self, prompt: str, images: List[str]) -> Union[str, None]:
+        if not (isinstance(prompt, str)):
+            print("Prompt is not of expected type string")
+            return 
         
+        if not (isinstance(images, list)) or len(list) == 0:
+            print("Images is not of expected type list")
+            return 
+
+        prompt = "Respond in English. " + prompt
+
         payload = {
             "model": self._model,
             "prompt": prompt,

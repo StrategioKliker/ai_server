@@ -1,12 +1,15 @@
 import os
+from rq import Queue
+from time import sleep 
+from redis import Redis
 from fastapi import FastAPI
-from typing import List, Optional, Any, Dict 
-from prometheus_fastapi_instrumentator  import Instrumentator
-from prometheus_client import Counter, Histogram, Gauge
 from pydantic import BaseModel
 from vision import ImageInference
-from rq import Queue
-from redis import Redis
+from jsonz.validator import is_valid_json
+from typing import List, Optional, Any, Dict, Union 
+from jsonz.extractor import extract_json_from_str
+from prometheus_client import Counter, Histogram, Gauge
+from prometheus_fastapi_instrumentator  import Instrumentator
 
 # Start FastAPI app 
 app = FastAPI()
@@ -29,25 +32,55 @@ class VisionTaskRequest(BaseModel):
     request_id: str 
     prompt: str 
     metadata: Optional[Dict[str, Any]] = None 
+    expected_json_schema: Optional[Dict[str, str]] = None 
 
 @app.post("/inference/new_vision_task")
 def new_vision_task(task: VisionTaskRequest):
     print(f"Submitting new task: {task.request_id}")
-    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id)
+    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id, task.expected_json_schema)
 
     visual_inference_jobs_created_count.inc()
     queue_size_gauge.set(queue.count)
     return {"status": "queued", "request_id": task.request_id, "job_id": job.id},
 
-def run_vision_inference(prompt: str, images: List[str], request_id: str):
+def run_vision_inference(prompt: str, images: List[str], request_id: str, expected_json_schema: Union[List[str], None]):
     queue_size_gauge.set(queue.count)
     print("Running vision inference for request id: ", request_id)
     img_inf = ImageInference('minicpm')
-    
+
+    inference_attemps = 3    
     try: 
-        with visual_inference_duration_in_seconds.time():
-            response = img_inf.prompt(prompt, images)
-        print("Completed with response: ", response)
+        json_result = None 
+        while inference_attemps > 0:
+            response = None 
+            with visual_inference_duration_in_seconds.time():
+                response = img_inf.prompt(prompt, images)
+                print("Completed with response: ", response)
+
+            if not response: 
+                inference_attemps -= 1
+                print("Inference failed to get response, retrying with attempts remaining: ", {inference_attemps})
+                sleep(5)
+                continue
+            
+            extracted_json = extract_json_from_str(response)
+            if not extracted_json:
+                inference_attemps -= 1
+                print("Failed to extract json from string, retrying with attempts remaining: ", {inference_attemps})
+                sleep(5)
+                continue
+
+            if expected_json_schema and not is_valid_json(expected_json_schema, extracted_json):
+                inference_attemps -= 1
+                print("JSON validation failed, retrying with attempts remaining: ", {inference_attemps})
+                sleep(5)
+                continue
+        
+        if json_result is None: 
+            visual_inference_failure_count.inc()
+            print("Inference failed for request: ", request_id)
+            return None 
+        
     except Exception as e: 
         visual_inference_failure_count.inc()
         print("Inference failed: ", e)
