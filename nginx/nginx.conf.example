@@ -1,0 +1,34 @@
+events {}
+
+http {
+    upstream app { server app:8000; }
+    upstream grafana { server grafana:3000; }
+
+    server {
+        listen 80;
+
+        location /app/ {
+            # ---- WHITELIST ---- #
+            # Allow the Docker bridge IP for internal Docker access from host
+            allow 172.18.0.1;
+            # Allow localhost access
+            allow 127.0.0.1; 
+            deny all;        
+
+
+            # IMPORTANT: Rewrite the URL to remove '/app/' prefix before proxying
+            rewrite ^/app/(.*)$ /$1 break;
+            proxy_pass http://app; 
+        }
+
+        location /grafana/ {
+            # ---- WHITELIST ---- #
+            # Allow the Docker bridge IP for internal Docker access from host
+            allow 172.18.0.1;
+            # Allow localhost access
+            deny all;      
+            proxy_pass http://grafana;
+        }
+
+    }
+}

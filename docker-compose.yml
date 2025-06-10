@@ -75,6 +75,9 @@ services:
       - cadvisor
 
   grafana:
+    environment:
+      - GF_SERVER_ROOT_URL=http://127.0.0.1:80/grafana/ 
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     image: grafana/grafana:latest
     ports: 
       - "3000:3000"
@@ -104,6 +107,15 @@ services:
     cap_add: 
       - SYS_ADMIN
 
+  nginx:
+    image: nginx:latest 
+    ports: 
+      - "80:80"
+    volumes: 
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app 
+      - grafana 
 
 volumes: 
   redis_data:
