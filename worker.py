@@ -1,7 +1,5 @@
 import os
 from time import sleep
-import traceback
-import redis.exceptions
 from rq import Worker, Queue
 from redis import Redis
 from redis.exceptions import ConnectionError

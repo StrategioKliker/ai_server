@@ -83,6 +83,28 @@ services:
     volumes: 
       - grafana_data:/var/lib/grafana
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports: 
+      - "9100:9100"
+    volumes: 
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--no-collector.filesystem'
+
+  dcgm-exporter: 
+    image: nvidia/dcgm-exporter:latest
+    runtime: nvidia
+    ports:
+      - "9400:9400"
+    cap_add: 
+      - SYS_ADMIN
+
+
 volumes: 
   redis_data:
   grafana_data:
