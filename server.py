@@ -37,7 +37,7 @@ class VisionTaskRequest(BaseModel):
 @app.post("/inference/new_vision_task")
 def new_vision_task(task: VisionTaskRequest):
     print(f"Submitting new task: {task.request_id}")
-    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id, task.expected_json_schema, job_timeout=600)
+    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id, task.expected_json_schema, job_timeout=300)
 
     visual_inference_jobs_created_count.inc()
     queue_size_gauge.set(queue.count)

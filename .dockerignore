@@ -1,3 +1,4 @@
 .git 
 __pycache__
 nginx/nginx.conf.example
+minicpm
