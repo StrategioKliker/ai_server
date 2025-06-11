@@ -15,7 +15,7 @@ if __name__ == '__main__':
             worker = Worker([queue], connection=conn)
             worker.work()
         except ConnectionError as e: 
-            print(f"[WORKER] Redis unavailable, retrying in 5s... ({e})")
-            sleep(5)
+            print(f"[WORKER] Redis unavailable, retrying in 2s... ({e})")
+            sleep(2)
 
 

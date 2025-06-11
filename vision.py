@@ -4,8 +4,6 @@ import base64
 import requests
 from datetime import datetime
 from typing import List, Union 
-
-
 class ImageInference: 
     def __init__(self, model):
         # NOTE -> Top performers are qwen and minicpm 
@@ -26,35 +24,60 @@ class ImageInference:
 
         self.elapsed_minutes = 0
         
-    def __encode_image(self, path):
-        with open(path, "rb") as f:
-            return base64.b64encode(f.read()).decode()
-        
-    def __encode_images(self, images):
-        encoded_images = []
-        for img_path in images:
-            try:
-                encoded_images.append(self.__encode_image(img_path))
-            except FileNotFoundError:
-                print(f"Error: Couldn’t find image at '{img_path}'. Double-check the path.")
-                exit(1)
-
-        return encoded_images
+    def __encode_image(self, img: str):
+        if img.startswith('http'):
+            return base64.b64encode(img).decode()
+        else: 
+            with open(img, "rb") as f:
+                return base64.b64encode(f.read()).decode()
     
     def __process_images(self, images): 
-        pass
+        encoded_images = []
+        for img in images: 
+            if not isinstance(img, str):
+                continue
+
+            # To support local images for testing purposes 
+            if not img.startswith('http'):
+                encoded_images.append(self.__encode_image(img))
+                continue
+
+            # TODO -> Add later failure recovery
+            try: 
+                res = requests.get(img)
+                print("Res status: ")
+                if res is None or res.status_code != 200: 
+                    continue
+                
+                encoded_images.append(self.__encode_image(res.content))
+
+            except Exception as e: 
+                print("Error fetching image from: ", img)
+        
+        # If any image failed to be encoded return None, as original prompt requested these 
+        # we need to ensure it either fails completely or does it's job properly.
+        if len(encoded_images) != len(images):
+            return None 
             
+        return encoded_images
+    
     def prompt(self, prompt: str, images: List[str]) -> Union[str, None]:
         if not (isinstance(prompt, str)):
             print("Prompt is not of expected type string")
-            return 
+            return None
         
-        if not (isinstance(images, list)) or len(list) == 0:
+        if not (isinstance(images, list)) or len(images) == 0:
             print("Images is not of expected type list")
-            return 
+            return None
+        
+        images = self.__process_images(images)
+        if images is None: 
+            print("Image encoding failed")
+            return None 
 
         prompt = "Respond in English. " + prompt
 
+        print("Running prompt....")
         payload = {
             "model": self._model,
             "prompt": prompt,
