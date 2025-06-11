@@ -20,6 +20,13 @@ services:
       - "11435:11435"
     volumes: 
       - ./ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     # healthcheck:
     #   test: ["CMD", "curl", "-fsS", "http://localhost:11435/api/tags"]
     #   interval: 3s

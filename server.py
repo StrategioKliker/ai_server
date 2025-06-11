@@ -37,7 +37,7 @@ class VisionTaskRequest(BaseModel):
 @app.post("/inference/new_vision_task")
 def new_vision_task(task: VisionTaskRequest):
     print(f"Submitting new task: {task.request_id}")
-    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id, task.expected_json_schema)
+    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id, task.expected_json_schema, job_timeout=600)
 
     visual_inference_jobs_created_count.inc()
     queue_size_gauge.set(queue.count)
@@ -75,16 +75,23 @@ def run_vision_inference(prompt: str, images: List[str], request_id: str, expect
                 print("JSON validation failed, retrying with attempts remaining: ", {inference_attemps})
                 sleep(5)
                 continue
+
+            json_result = extracted_json
+            break
         
         if json_result is None: 
             visual_inference_failure_count.inc()
             print("Inference failed for request: ", request_id)
-            return None 
+            return {"success": False, "reason": f"Inference failed for request: {request_id}"}
+        
+        print("Extracted: ", extracted_json)
+        return {"success": True, "result": json_result}
         
     except Exception as e: 
         visual_inference_failure_count.inc()
         print("Inference failed: ", e)
-        raise
+        return {"success": False, "reason": "Inference failed"}
+
 
 
 
