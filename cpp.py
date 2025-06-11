@@ -7,7 +7,7 @@ from llama_cpp.llama_chat_format import MiniCPMv26ChatHandler
 
 print("Loading MiniCPM model with multimodal support…")
 
-# 1️⃣ Ensure projector exists (correct GGUF file)
+#  Ensure projector exists (correct GGUF file)
 projector_dir = "minicpm"
 projector_path = os.path.join(projector_dir, "mmproj-model-f16.gguf")
 os.makedirs(projector_dir, exist_ok=True)
@@ -29,7 +29,7 @@ if not os.path.isfile(projector_path):
                 f.write(chunk)
     print("✅ Projector downloaded:", projector_path)
 
-# 2️⃣ Setup chat handler and model
+#  Setup chat handler and model
 chat_handler = MiniCPMv26ChatHandler(clip_model_path=projector_path)
 
 
@@ -78,9 +78,14 @@ class ImageInference:
         # 👇 Run the model
         start = datetime.now()
         try:
-            res = llm.create_chat_completion(messages=[
-                {"role": "user", "content": content}
-            ])
+            res = llm.create_chat_completion(
+                messages=[
+                    {"role": "user", "content": content}
+                ], 
+                response_format={
+                    "type": "json_object",
+                }, 
+            )
             self.elapsed_minutes = (datetime.now() - start).total_seconds() / 60
             return res["choices"][0]["message"]["content"].strip()
         except Exception as e:
