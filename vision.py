@@ -82,7 +82,7 @@ class ImageInference:
             "model": self._model,
             "prompt": prompt,
             "stream": False,
-            "images": self.__encode_images(images)
+            "images": images
         }
         # If this errors out, check that Ollama is actually running on port 11434.
         start_time = datetime.now()
