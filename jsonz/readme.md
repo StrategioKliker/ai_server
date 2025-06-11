@@ -1,17 +1,19 @@
-# JSON Extractor Documentation
+# JSON Extractor
 
 ## Function Signature
 
 ```python
-import re
 import json
 from typing import Union
+
+def is_escaped(text: str, char_pos: int) -> bool:
+    """Return True if the quote at `char_pos` is escaped."""
 
 def extract_json_from_str(text: str) -> Union[list, dict, None]:
 ```
 
 ### Purpose
-This function scans through a given string and attempts to extract any valid JSON objects (dicts or lists enclosed in `{}`) based on brace matching. It is particularly useful for parsing AI-generated output, logs, or text with embedded JSON.
+This function scans a string and attempts to extract any valid JSON objects or arrays. It relies on matching braces/brackets rather than regex, making it useful for parsing AI-generated output, logs or other text with embedded JSON.
 
 ### Returns
 - A `dict` if only one JSON object is found.
@@ -25,33 +27,37 @@ This function scans through a given string and attempts to extract any valid JSO
 ### 1. Initialize state
 ```python
 results = []
-nested_level = 0
-json_buffer = ''
-in_json = False
+start_idx = None
+stack = []
+in_string = False
 ```
-- `results`: holds all successfully parsed JSON objects
-- `nested_level`: tracks how deep into brace nesting we are
-- `json_buffer`: accumulates characters inside a JSON block
-- `in_json`: flag to indicate we're inside a potential JSON segment
+- `results`: collected JSON values
+- `start_idx`: index where the current JSON block begins
+- `stack`: tracks opening `{` or `[` characters
+- `in_string`: whether we are inside a quoted string
 
 ### 2. Iterate over each character
 ```python
-for char in text:
+for i, char in enumerate(text):
 ```
-- If `{` is found: increment nesting, start buffering
-- If in JSON mode: add every character to `json_buffer`
-- If `}` is found: decrement nesting
-  - If nesting reaches `0`, attempt to parse the buffer
+- Toggle `in_string` when an unescaped `"` is encountered.
+- If `{` or `[` appears and we're not inside a string:
+  - If the stack is empty, set `start_idx` to `i`.
+  - Push the character on the stack.
+- If `}` or `]` appears while not in a string:
+  - Pop and ensure it matches the opening char.
+  - If it was the last opener and parsing succeeded, attempt to load the substring as JSON.
 
 ### 3. Parse buffered JSON
+- Only attempts parsing when a full block is detected. Any `json.JSONDecodeError` is ignored.
 ```python
-if nested_level == 0 and json_buffer:
-    try:
-        results.append(json.loads(json_buffer))
-    except json.JSONDecodeError:
-        pass
+json_candidate = text[start_idx:i+1]
+try:
+    results.append(json.loads(json_candidate))
+except json.JSONDecodeError:
+    pass
+start_idx = None
 ```
-- Only attempts parsing when a full `{...}` block is complete
 - Ignores malformed JSON (does not raise exception)
 
 ### 4. Return results
@@ -93,15 +99,13 @@ Output:
 ---
 
 ## Limitations
-- Only extracts JSON objects starting with `{`, not arrays (`[...]`) unless they're embedded inside an object.
-- Doesn't handle escaped braces (`\{` or `\}`) or JSON inside strings.
-- Only handles balanced brace-based extraction.
-- Ignores syntax errors silently (useful for noisy AI output, but not good for debugging broken JSON).
+- Handles both objects and arrays but still relies purely on brace/bracket matching.
+- Braces inside strings are ignored, however invalid or partial JSON fragments are skipped silently.
+- Ignores parsing errors without raising exceptions (useful for noisy AI output).
 
 ---
 
 ## Potential Improvements
-- Support for arrays (`[...]`) and mixed `{}`/`[]` extraction.
 - Collect and return errors or raw text of failed JSON segments.
 - Add optional strict mode to raise exceptions or return failure reasons.
 - Smarter string detection (e.g. not to break on braces inside strings).
