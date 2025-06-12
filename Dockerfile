@@ -7,6 +7,15 @@ COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
 # Set workdirectory 
 WORKDIR /app 
 
+# Install system build tools for building native extensions (like llama-cpp-python)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    python3-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install python dependencies
 COPY pyproject.toml uv.lock ./
 
