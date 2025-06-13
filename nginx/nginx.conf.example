@@ -10,7 +10,7 @@ http {
     upstream grafana { server grafana:3000; }
 
     server {
-        listen 80;
+        listen 8080;
 
         location /app/ {
             # ---- WHITELIST ---- #
