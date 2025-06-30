@@ -1,33 +1,35 @@
-# Get python 
-FROM python:3.12-slim 
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
-# GET UV from their base image 
-COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
-
-# Set workdirectory 
-WORKDIR /app 
-
-# Install system build tools for building native extensions (like llama-cpp-python)
+# Install Python 3.10 and build tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
-    python3-dev \
-    git \
+    python3 python3-dev python3-pip python3-venv \
+    build-essential cmake git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
-COPY pyproject.toml uv.lock ./
+# Symlink python3 to python
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
+# Get uv
+COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
+
+# Set working dir
+WORKDIR /app
+
+# Build llama-cpp-python with CUDA support
+ENV CMAKE_ARGS="-DGGML_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=61"
+ENV FORCE_CMAKE=1
+ENV LLAMA_CPP_LOG_LEVEL=error
+
+ENV UV_HTTP_TIMEOUT=600
+ENV UV_RESOLVE_PREFER_BINARY=1
+COPY pyproject.toml uv.lock ./
 RUN uv sync --locked
 
-# Copy source code 
-COPY . . 
+COPY minicpm/mmproj-model-f16.gguf /app/minicpm/mmproj-model-f16.gguf
+COPY . .
 
-# Expose port 
-EXPOSE 8000 
-
-# Activate venv by putting it in PATH
 ENV PATH="/app/.venv/bin:$PATH"
+EXPOSE 8000
 
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
