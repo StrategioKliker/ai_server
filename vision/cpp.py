@@ -43,9 +43,8 @@ class suppress_stdout(object):
         self.errnull_file.close()
 
 
-
 class ImageInference:
-    def __init__(self):
+    def __init__(self, init_only: bool = False):
         self.elapsed_minutes = 0
 
         print("Loading MiniCPM model with multimodal support…", flush=True)
@@ -54,6 +53,9 @@ class ImageInference:
         projector_dir = "minicpm"
         self._projector_path = os.path.join(projector_dir, "mmproj-model-f16.gguf")
         os.makedirs(projector_dir, exist_ok=True)
+
+        if init_only:
+            self.__init_projector_if_not_exists()
 
         with suppress_stdout():
             #  Setup chat handler and model
@@ -76,7 +78,7 @@ class ImageInference:
             )
 
 
-    def init_projector_if_not_exists(self):
+    def __init_projector_if_not_exists(self):
         if not os.path.isfile(self._projector_path):
             print("Downloading correct projector model...", flush=True)
             download_url = (
@@ -136,4 +138,4 @@ class ImageInference:
 
 
 if __name__ == "__main__":
-    ImageInference().init_projector_if_not_exists()
+    ImageInference(init_only=True)
