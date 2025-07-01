@@ -34,12 +34,16 @@ services:
     #   retries: 10
     #   start_period: 20s
 
+  # llama-builder:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.llama
+
   app: 
     build: .
-    command: uv run uvicorn server:app --host 0.0.0.0 --port 8000
+    command: python -m uvicorn server:app --host 0.0.0.0 --port 8000
     ports: 
       - "8000:8000"
-    runtime: nvidia
     environment: 
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_URL=http://ollama:11435/api/generate 
@@ -51,18 +55,11 @@ services:
       #   condition: service_started 
       redis:
         condition: service_healthy
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  
 
   worker: 
     build: .
-    command: uv run python worker.py 
-    runtime: nvidia
+    command: python worker.py 
     environment: 
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_URL=http://ollama:11435/api/generate 
@@ -75,13 +72,6 @@ services:
       # ollama:
       #   condition: service_started
     restart: always 
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
 
   cadvisor: 
     image:  gcr.io/cadvisor/cadvisor:v0.47.2

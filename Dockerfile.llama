@@ -11,24 +11,17 @@ RUN apt-get update && \
 # Symlinks
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# CUDA build flags
-ENV CMAKE_ARGS="-DGGML_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=61"
-ENV FORCE_CMAKE=1
-
-# Fix missing libcuda.so.1 for linking by pointing to CUDA stubs
-RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/x86_64-linux-gnu/libcuda.so && \
-    ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/x86_64-linux-gnu/libcuda.so.1
-
-# Build llama-cpp-python wheel
+# Build llama-cpp-python wheel using the pre-built CUDA package
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 RUN pip install --upgrade pip setuptools wheel
 
-# NOTE: Keep --no-binary only if you need to build with CUDA support.
-RUN pip install llama-cpp-python==0.3.9 --no-binary=:all:
+RUN pip install llama-cpp-python==0.3.9 \
+    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
 
 # Keep the wheel around
-RUN mkdir /wheels && pip download llama_cpp_python -d /wheels
+RUN mkdir /wheels && pip download llama_cpp_python==0.3.9 \
+    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 -d /wheels
 
 # Final base image to copy into
 FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS llama-final

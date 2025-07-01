@@ -1,35 +1,31 @@
 FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
-# Install Python 3.10 and build tools
+# Install Python 3.10 and system tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3 python3-dev python3-pip python3-venv \
-    build-essential cmake git \
-    && rm -rf /var/lib/apt/lists/*
+    python3.10 python3.10-venv python3.10-dev python3.10-distutils \
+    build-essential cmake git curl wget && \
+    ln -sf /usr/bin/python3.10 /usr/bin/python && \
+    ln -sf /usr/bin/python3.10 /usr/bin/python3 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python && \
+    rm -rf /var/lib/apt/lists/*
 
-# Symlink python3 to python
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-# Get uv
-COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
-
-# Set working dir
 WORKDIR /app
 
-# Build llama-cpp-python with CUDA support
-ENV CMAKE_ARGS="-DGGML_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=61"
-ENV FORCE_CMAKE=1
-ENV LLAMA_CPP_LOG_LEVEL=error
+# Copy precompiled requirements
+COPY requirements.txt .
 
-ENV UV_HTTP_TIMEOUT=600
-ENV UV_RESOLVE_PREFER_BINARY=1
-COPY pyproject.toml uv.lock ./
-RUN uv sync --locked
+# Install deps (from compiled file + custom index)
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir \
+      llama-cpp-python==0.3.9 \
+      uvicorn \
+      --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
 
+# Copy code and model
 COPY minicpm/mmproj-model-f16.gguf /app/minicpm/mmproj-model-f16.gguf
 COPY . .
 
-ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
