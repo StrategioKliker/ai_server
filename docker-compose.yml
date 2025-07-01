@@ -34,11 +34,6 @@ services:
     #   retries: 10
     #   start_period: 20s
 
-  # llama-builder:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.llama
-
   app: 
     build: .
     command: python -m uvicorn server:app --host 0.0.0.0 --port 8000
@@ -55,7 +50,12 @@ services:
       #   condition: service_started 
       redis:
         condition: service_healthy
-  
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+      
 
   worker: 
     build: .
@@ -72,6 +72,12 @@ services:
       # ollama:
       #   condition: service_started
     restart: always 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+      
 
   cadvisor: 
     image:  gcr.io/cadvisor/cadvisor:v0.47.2
