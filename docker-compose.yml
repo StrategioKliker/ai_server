@@ -10,6 +10,27 @@ services:
       timeout: 1s 
       retries: 5
 
+  model-server:
+    build: .
+    command: python -m uvicorn model_server:app --host 0.0.0.0 --port 8001
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 60s
+      timeout: 20s
+      retries: 5
+      start_period: 180s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+
   # ollama: 
   #   environment: 
   #     - OLLAMA_HOST=http://0.0.0.0:11435
@@ -57,17 +78,20 @@ services:
             - capabilities: [gpu]
       
 
-  worker: 
+  worker:
     build: .
-    command: python worker.py 
-    environment: 
+    command: python worker.py
+    environment:
       - REDIS_URL=redis://redis:6379/0
-      - OLLAMA_URL=http://ollama:11435/api/generate 
+      - OLLAMA_URL=http://ollama:11435/api/generate
+      - MODEL_SERVER_URL=http://model-server:8001/infer
       - LLAMA_CPP_LOG_LEVEL=error
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     depends_on: 
       redis:
+        condition: service_healthy
+      model-server:
         condition: service_healthy
       # ollama:
       #   condition: service_started

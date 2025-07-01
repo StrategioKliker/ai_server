@@ -1,5 +1,6 @@
 # inference.py
-from vision.cpp import ImageInference
+import os
+import requests
 from jsonz.validator import is_valid_json
 from jsonz.extractor import extract_json_from_str
 from prometheus_client import Counter, Histogram
@@ -9,8 +10,7 @@ from time import sleep
 visual_inference_duration_in_seconds = Histogram("visual_inference_duration_in_seconds", "Duration of vision inference jobs in seconds")
 visual_inference_failure_count = Counter("visual_inference_failure_count", "Total number of inference jobs failed")
 
-# Load model once when this module is imported in worker process
-img_inf = ImageInference()
+MODEL_SERVER_URL = os.getenv("MODEL_SERVER_URL", "http://localhost:8001/infer")
 
 def run_vision_inference(prompt, images, request_id, expected_json_schema):
     print("Running vision inference for request id:", request_id, flush=True)
@@ -21,8 +21,19 @@ def run_vision_inference(prompt, images, request_id, expected_json_schema):
         while inference_attempts > 0:
             response = None
             with visual_inference_duration_in_seconds.time():
-                response = img_inf.prompt(prompt, images)
+                try:
+                    res = requests.post(
+                        MODEL_SERVER_URL,
+                        json={"prompt": prompt, "images": images},
+                        timeout=600,
+                    )
+                    res.raise_for_status()
+                    response = res.json().get("result")
+                except Exception as e:
+                    print("Model server request failed:", e, flush=True)
+                    response = None
                 print("Completed with response:", response, flush=True)
+
 
             if not response:
                 inference_attempts -= 1

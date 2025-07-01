@@ -95,7 +95,6 @@ class ImageInference:
                         f.write(chunk)
             print("Projector downloaded:", self._projector_path, flush=True)
 
-
     def prompt(self, prompt: str, images: List[str]) -> Union[str, None]:
         print("Running prompt", flush=True)
         if not prompt or not isinstance(prompt, str) or not images:
@@ -105,19 +104,26 @@ class ImageInference:
         # Build structured multimodal content
         content = [{"type": "text", "text": "Respond in English. " + prompt}]
 
+        image_found = False 
         for img in images:
             if os.path.isfile(img):
                 content.append({
                     "type": "image_url",
                     "image_url": {"url": f"file://{os.path.abspath(img)}"}
                 })
+                image_found = True 
             elif img.startswith(("http://", "https://")):
                 content.append({
                     "type": "image_url",
                     "image_url": {"url": img}
                 })
+                image_found = True 
             else:
                 print("Skipping unsupported image:", img, flush=True)
+
+        if not image_found: 
+            print("No valid images")
+            return None 
 
         # Run the model
         start = datetime.now()
@@ -131,6 +137,7 @@ class ImageInference:
                 }, 
             )
             self.elapsed_minutes = (datetime.now() - start).total_seconds() / 60
+            print("Result in cpp: ", res["choices"][0]["message"]["content"])
             return res["choices"][0]["message"]["content"].strip()
         except Exception as e:
             print("LLM inference error:", e, flush=True)
