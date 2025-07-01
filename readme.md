@@ -83,3 +83,7 @@ python tests.py
 ```
 
 (Some tests may fail because they rely on model outputs.)
+
+
+
+docker build -f Dockerfile.llama -t llama-cpp:cuda .
