@@ -29,25 +29,25 @@ queue = Queue(connection=redis_conn)
 
 class VisionTaskRequest(BaseModel):
     images: List[str]
-    request_id: str 
+    task_id: str 
     prompt: str 
     metadata: Optional[Dict[str, Any]] = None 
     expected_json_schema: Optional[Dict[str, str]] = None 
 
 @app.post("/inference/new_vision_task")
 def new_vision_task(task: VisionTaskRequest):
-    print(f"Submitting new task: {task.request_id}", flush=True)
-    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.request_id, task.expected_json_schema, job_timeout=600)
+    print(f"Submitting new task: {task.task_id}", flush=True)
+    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.task_id, task.expected_json_schema, job_timeout=600)
 
     queue_size_gauge.set(queue.count)  # update gauge here when job is queued
 
-    return {"status": "queued", "request_id": task.request_id, "job_id": job.id}
+    return {"status": "queued", "task_id": task.task_id, "job_id": job.id}
 
 
 MODEL_SERVER_URL = os.getenv("MODEL_SERVER_URL", "http://localhost:8001/infer")
 
-def run_vision_inference(prompt, images, request_id, expected_json_schema):
-    print("Running vision inference for request id:", request_id, flush=True)
+def run_vision_inference(prompt, images, task_id, expected_json_schema):
+    print("Running vision inference for request id:", task_id, flush=True)
 
     inference_attempts = 3
     json_result = None
@@ -93,13 +93,22 @@ def run_vision_inference(prompt, images, request_id, expected_json_schema):
 
         if json_result is None:
             visual_inference_failure_count.inc()
-            print(f"Inference failed for request: {request_id}", flush=True)
-            return {"success": False, "reason": f"Inference failed for request: {request_id}"}
+            print(f"Inference failed for request: {task_id}", flush=True)
+            send_prompt_task_result(task_id, None, f"Inference failed for request: {task_id}")
+            return {"success": False, "reason": f"Inference failed for request: {task_id}"}
 
         print("Extracted:", json_result, flush=True)
+        send_prompt_task_result(task_id, json_result)
         return {"success": True, "result": json_result}
 
     except Exception as e:
         visual_inference_failure_count.inc()
         print("Inference failed:", e, flush=True)
+        send_prompt_task_result(task_id, json_result, f"Inference failed for request: {task_id}")
         return {"success": False, "reason": "Inference failed"}
+    
+
+def send_prompt_task_result(task_id, result, error = None):
+    print("Task id: ", task_id)
+    print("Sending back: ", result)
+    print("Error: ", error)
