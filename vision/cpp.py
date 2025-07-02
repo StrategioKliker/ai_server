@@ -95,7 +95,7 @@ class ImageInference:
                         f.write(chunk)
             print("Projector downloaded:", self._projector_path, flush=True)
 
-    def prompt(self, prompt: str, images: List[str]) -> Union[str, None]:
+    def prompt(self, prompt: str, system_prompt: Union[str, None], images: List[str]) -> Union[str, None]:
         print("Running prompt", flush=True)
         if not prompt or not isinstance(prompt, str) or not images:
             print("Invalid prompt or images", flush=True)
@@ -127,11 +127,18 @@ class ImageInference:
 
         # Run the model
         start = datetime.now()
+        messages=[
+            {"role": "user", "content": content},
+        ], 
+
+        if system_prompt: 
+            messages.insert(0, {
+                'role': 'system', 'content': system_prompt
+            })
+
         try:
             res = self.llm.create_chat_completion(
-                messages=[
-                    {"role": "user", "content": content}
-                ], 
+                messages,
                 response_format={
                     "type": "json_object",
                 }, 

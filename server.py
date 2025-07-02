@@ -30,6 +30,7 @@ queue = Queue(connection=redis_conn)
 class VisionTaskRequest(BaseModel):
     images: List[str]
     task_id: str 
+    system_prompt: Union[str, None]
     prompt: str 
     metadata: Optional[Dict[str, Any]] = None 
     expected_json_schema: Optional[Dict[str, str]] = None 
@@ -37,7 +38,7 @@ class VisionTaskRequest(BaseModel):
 @app.post("/inference/new_vision_task")
 def new_vision_task(task: VisionTaskRequest):
     print(f"Submitting new task: {task.task_id}", flush=True)
-    job = queue.enqueue(run_vision_inference, task.prompt, task.images, task.task_id, task.expected_json_schema, job_timeout=600)
+    job = queue.enqueue(run_vision_inference, task.prompt, task.system_prompt, task.images, task.task_id, task.expected_json_schema, job_timeout=600)
 
     queue_size_gauge.set(queue.count)  # update gauge here when job is queued
 
@@ -46,7 +47,7 @@ def new_vision_task(task: VisionTaskRequest):
 
 MODEL_SERVER_URL = os.getenv("MODEL_SERVER_URL", "http://localhost:8001/infer")
 
-def run_vision_inference(prompt, images, task_id, expected_json_schema):
+def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_schema):
     print("Running vision inference for request id:", task_id, flush=True)
 
     inference_attempts = 3
@@ -58,7 +59,7 @@ def run_vision_inference(prompt, images, task_id, expected_json_schema):
                 try:
                     res = requests.post(
                         MODEL_SERVER_URL,
-                        json={"prompt": prompt, "images": images},
+                        json={"prompt": prompt, "images": images, "system_prompt": system_prompt},
                         timeout=600,
                     )
                     res.raise_for_status()
