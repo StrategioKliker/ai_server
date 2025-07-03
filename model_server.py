@@ -10,6 +10,7 @@ model = ImageInference()
 
 class InferenceRequest(BaseModel):
     prompt: str
+    system_prompt: str 
     images: List[str]
 
 class InferenceResponse(BaseModel):

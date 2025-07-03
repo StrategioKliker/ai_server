@@ -3,3 +3,4 @@ ollama
 nginx/nginx.conf
 minicpm
 packages.microsoft.*
+env.py

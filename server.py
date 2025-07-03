@@ -32,7 +32,6 @@ class VisionTaskRequest(BaseModel):
     task_id: str 
     system_prompt: Union[str, None]
     prompt: str 
-    metadata: Optional[Dict[str, Any]] = None 
     expected_json_schema: Optional[Dict[str, str]] = None 
 
 @app.post("/inference/new_vision_task")
