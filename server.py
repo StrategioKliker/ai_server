@@ -42,6 +42,10 @@ def new_vision_task(task: VisionTaskRequest):
 
     return {"status": "queued", "task_id": task.task_id, "job_id": job.id}
 
+@app.get("/ping")
+def ping():
+    return {"ping": "pong"}
+
 
 MODEL_SERVER_URL = os.getenv("MODEL_SERVER_URL", "http://localhost:8001/infer")
 
