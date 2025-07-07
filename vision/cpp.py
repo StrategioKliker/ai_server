@@ -108,7 +108,7 @@ class ImageInference:
         start = datetime.now()
         messages=[
             {"role": "user", "content": content},
-        ], 
+        ] 
 
         if system_prompt: 
             messages.insert(0, {
