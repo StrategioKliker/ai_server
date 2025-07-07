@@ -92,9 +92,14 @@ class ImageInference:
                 })
                 image_found = True 
             elif img.startswith(("http://", "https://")):
+                res = requests.get(img)
+                if res is None or res.status_code != 200:
+                    print("Failed to get image from url: ", img, " with status code: ", res.status_code)
+                    continue
+                
                 content.append({
                     "type": "image_url",
-                    "image_url": {"url": img}
+                    "image_url": {"bytes": res.content}
                 })
                 image_found = True 
             else:
