@@ -69,7 +69,7 @@ def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_s
                     response = res.json().get("result")
                 except Exception as e:
                     print("Model server request failed:", e, flush=True)
-                    print("Stack: ", )
+                    print("Stack: ", traceback.format_exc(), flush=True)
                     response = None
                 print("Completed with response:", response, flush=True)
 
