@@ -3,6 +3,7 @@ import requests
 
 
 def init_projector_if_not_exists():
+    os.makedirs('minicpm', exist_ok=True)
     projector_path = projector_path = os.path.join('minicpm', "mmproj-model-f16.gguf")
     if not os.path.isfile(projector_path):
     
