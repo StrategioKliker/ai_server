@@ -1,6 +1,6 @@
 import os
-
 import requests
+import traceback
 from rq import Queue
 from time import sleep 
 from redis import Redis
@@ -11,6 +11,7 @@ from typing import List, Optional, Any, Dict, Union
 from jsonz.extractor import extract_json_from_str
 from prometheus_fastapi_instrumentator  import Instrumentator
 from prometheus_client import Counter, Histogram, Gauge
+
 
 
 # Start FastAPI app 
@@ -68,6 +69,7 @@ def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_s
                     response = res.json().get("result")
                 except Exception as e:
                     print("Model server request failed:", e, flush=True)
+                    print("Stack: ", )
                     response = None
                 print("Completed with response:", response, flush=True)
 
