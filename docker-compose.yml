@@ -112,6 +112,8 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    command: 
+      - '-port=7071'
 
   prometheus: 
     image: prom/prometheus:latest 
