@@ -1,5 +1,16 @@
 events {}
 
+stream {
+    upstream ssh {
+        server host.docker.internal:22;
+    }
+
+    server {
+        listen 2222;
+        proxy_pass ssh;
+    }
+}
+
 http {
     map $http_x_forwarded_for $real_client_ip {
         default $http_x_forwarded_for;
