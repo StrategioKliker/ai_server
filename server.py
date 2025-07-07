@@ -1,7 +1,6 @@
 import os
 
 import requests
-from inference import run_vision_inference
 from rq import Queue
 from time import sleep 
 from redis import Redis
