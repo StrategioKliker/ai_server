@@ -18,7 +18,7 @@ class InferenceResponse(BaseModel):
 
 @app.post("/infer", response_model=InferenceResponse)
 def infer(req: InferenceRequest):
-    result = model.prompt(req.prompt, req.images)
+    result = model.prompt(req.prompt, req.system_prompt, req.images)
     return {"result": result}
 
 @app.get("/health")
