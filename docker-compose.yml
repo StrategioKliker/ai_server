@@ -106,7 +106,7 @@ services:
   cadvisor: 
     image:  gcr.io/cadvisor/cadvisor:v0.47.2
     ports: 
-      - "7070:7070"
+      - "7071:7071"
     volumes: 
       - /:/rootfs:ro
       - /var/run:/var/run:ro
