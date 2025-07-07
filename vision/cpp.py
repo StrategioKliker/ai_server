@@ -122,7 +122,7 @@ class ImageInference:
 
         try:
             res = self.llm.create_chat_completion(
-                messages,
+                messages = messages,
                 response_format={
                     "type": "json_object",
                 }, 
