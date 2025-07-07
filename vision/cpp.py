@@ -44,7 +44,7 @@ class suppress_stdout(object):
 
 
 class ImageInference:
-    def __init__(self, init_only: bool = False):
+    def __init__(self):
         self.elapsed_minutes = 0
 
         print("Loading MiniCPM model with multimodal support…", flush=True)
@@ -53,9 +53,6 @@ class ImageInference:
         projector_dir = "minicpm"
         self._projector_path = os.path.join(projector_dir, "mmproj-model-f16.gguf")
         os.makedirs(projector_dir, exist_ok=True)
-
-        if init_only:
-            self.__init_projector_if_not_exists()
 
         with suppress_stdout():
             #  Setup chat handler and model
@@ -76,24 +73,6 @@ class ImageInference:
                 main_gpu=0,     
                 gpu_mlock=True  
             )
-
-
-    def __init_projector_if_not_exists(self):
-        if not os.path.isfile(self._projector_path):
-            print("Downloading correct projector model...", flush=True)
-            download_url = (
-                "https://huggingface.co/openbmb/MiniCPM-V-2_6-gguf/resolve/"
-                "main/mmproj-model-f16.gguf"
-            )
-            resp = requests.get(download_url, stream=True)
-            if resp.status_code != 200:
-                raise RuntimeError("Failed to fetch projector GGUF file.")
-
-            with open(self._projector_path, "wb") as f:
-                for chunk in resp.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-            print("Projector downloaded:", self._projector_path, flush=True)
 
     def prompt(self, prompt: str, system_prompt: Union[str, None], images: List[str]) -> Union[str, None]:
         print("Running prompt", flush=True)
@@ -149,7 +128,3 @@ class ImageInference:
         except Exception as e:
             print("LLM inference error:", e, flush=True)
             return None
-
-
-if __name__ == "__main__":
-    ImageInference(init_only=True)
