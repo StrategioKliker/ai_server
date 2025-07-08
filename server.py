@@ -1,4 +1,6 @@
 import os
+import env 
+import json
 import requests
 import traceback
 from rq import Queue
@@ -29,6 +31,7 @@ queue = Queue(connection=redis_conn)
 
 class VisionTaskRequest(BaseModel):
     images: List[str]
+    token: str 
     task_id: str 
     system_prompt: Union[str, None]
     prompt: str 
@@ -36,6 +39,10 @@ class VisionTaskRequest(BaseModel):
 
 @app.post("/inference/new_vision_task")
 def new_vision_task(task: VisionTaskRequest):
+    if task.token != env.SERVER_TOKEN: 
+        print("Invalid access token")
+        return {"status": "denied"}
+
     print(f"Submitting new task: {task.task_id}", flush=True)
     job = queue.enqueue(run_vision_inference, task.prompt, task.system_prompt, task.images, task.task_id, task.expected_json_schema, job_timeout=600)
 
@@ -114,6 +121,20 @@ def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_s
     
 
 def send_prompt_task_result(task_id, result, error = None):
-    print("Task id: ", task_id)
-    print("Sending back: ", result)
-    print("Error: ", error)
+    # For now 
+    if error: 
+        return 
+    
+    print("Task id: ", task_id, flush=True)
+    print("Sending back: ", result, flush=True)
+    print("Error: ", error, flush=True)
+
+    result_url = env.MANAGER_API + env.SEND_PROMPT_RESULT_ROUTE
+    res = requests.post(result_url, data=json.dumps({
+        "task_id": task_id,
+        "prompt_result": result 
+    }))
+
+    print("Server saving result responded: ", res.content, flush=True )
+
+
