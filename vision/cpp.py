@@ -160,7 +160,9 @@ class ImageInference:
             
     
         if not image_found: 
-            return None         
+            return None   
+
+        return content      
 
 
     def prompt(self, prompt: str, system_prompt: Union[str, None], images: List[str]) -> Union[str, None]:
@@ -172,8 +174,8 @@ class ImageInference:
         # Build structured multimodal content
         content = [{"type": "text", "text": "Respond in English. " + prompt}]
 
-        found_images = self.__process_image_content(images=images, content=content)
-        if not found_images: 
+        content = self.__process_image_content(images=images, content=content)
+        if not content: 
             print("No valid images")
             return None         
 
