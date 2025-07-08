@@ -1,3 +1,4 @@
+import base64
 import os
 import sys
 import imghdr
@@ -124,26 +125,36 @@ class ImageInference:
             return f"file://{os.path.abspath(local_path)}"
         except: 
             return None 
+        
+
+    def __get_image_base64_data_from_url(image_url: str) -> str:
+        res = requests.get(image_url, timeout=10)
+        if res.status_code != 200:
+            raise Exception(f"Failed to fetch image: {res.status_code}")
+        
+        mime = res.headers.get("Content-Type", "image/png")
+        base64_data = base64.b64encode(res.content).decode('utf-8')
+        return f"data:{mime};base64,{base64_data}"
 
 
     def __process_image_content(self, images, content):
         image_found = False 
         for img in images:
-            image_path = None 
+            img_data = None 
 
             if os.path.isfile(img):
-                image_path = f"file://{os.path.abspath(img)}"    
+                img_data = f"file://{os.path.abspath(img)}"    
             elif img.startswith(("http://", "https://")):
-                image_path = self.__save_image(img)
+                img_data = self.__get_image_base64_data_from_url(img)
             
-            if image_path is None: 
+            if img_data is None: 
                 print("Skipping unsupported image:", img, flush=True)
                 continue
             
-            print("Reading image from path: ", image_path)
+            print("Reading image from path: ", img_data)
             content.append({
                 "type": "image_url",
-                "image_url": {"url": image_path}
+                "image_url": {"url": img_data}
             })
             image_found = True 
             
