@@ -1,10 +1,13 @@
-import base64
+
+import io
 import os
 import sys
+import base64
 import imghdr
 import hashlib
 import requests
 import filetype 
+from PIL import Image 
 from datetime import datetime
 from llama_cpp import Llama
 from typing import List, Union
@@ -82,49 +85,49 @@ class ImageInference:
             )
 
 
-    def __get_image_filename(self, img_url: str, img_content: bytes) -> Union[str, None]:
-        img_path = urlparse(img_url).path
-        img_url_base = unquote(img_path.rsplit('/', 1)[-1])
-        img_url_base = img_url_base or ''
-        img_url_base = img_url_base.rsplit('.', 1)[0]
-        if not img_url_base or len(img_url_base) < 3: 
-            img_url_base = f"img_{hashlib.sha256(img_content).hexdigest()[:12]}"
+    # def __get_image_filename(self, img_url: str, img_content: bytes) -> Union[str, None]:
+    #     img_path = urlparse(img_url).path
+    #     img_url_base = unquote(img_path.rsplit('/', 1)[-1])
+    #     img_url_base = img_url_base or ''
+    #     img_url_base = img_url_base.rsplit('.', 1)[0]
+    #     if not img_url_base or len(img_url_base) < 3: 
+    #         img_url_base = f"img_{hashlib.sha256(img_content).hexdigest()[:12]}"
 
 
-        common_suffix = (".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".webp", ".svg", ".ico", ".heic", ".avif", ".jfif", ".apng" )
-        for suffix in common_suffix: 
-            if img_url.lower().endswith(suffix): 
-                suffix = suffix.lstrip('.')
-                return f"{img_url_base}.{suffix}"
+    #     common_suffix = (".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".webp", ".svg", ".ico", ".heic", ".avif", ".jfif", ".apng" )
+    #     for suffix in common_suffix: 
+    #         if img_url.lower().endswith(suffix): 
+    #             suffix = suffix.lstrip('.')
+    #             return f"{img_url_base}.{suffix}"
 
-        img_kind = imghdr.what(None, img_content)
-        if img_kind:
-            return f"{img_url_base}.{img_kind}"
+    #     img_kind = imghdr.what(None, img_content)
+    #     if img_kind:
+    #         return f"{img_url_base}.{img_kind}"
         
-        img_info = filetype.guess(img_content)
-        if img_info: 
-            return f"{img_url_base}.{img_info.extension}"
+    #     img_info = filetype.guess(img_content)
+    #     if img_info: 
+    #         return f"{img_url_base}.{img_info.extension}"
         
-        return None 
+    #     return None 
 
-    def __save_image(self, img_url: str) -> Union[str, None]:
-        res = requests.get(img_url, timeout=60)
-        if res is None or res.status_code != 200: 
-            print("Failed to get image on url: ", img_url, " with response: ", res.status_code)
-            return None 
+    # def __save_image(self, img_url: str) -> Union[str, None]:
+    #     res = requests.get(img_url, timeout=60)
+    #     if res is None or res.status_code != 200: 
+    #         print("Failed to get image on url: ", img_url, " with response: ", res.status_code)
+    #         return None 
         
-        image_filename = self.__get_image_filename(img_url, res.content)   
-        if not image_filename: 
-            print("Failed to find image filename")
-            return None 
+    #     image_filename = self.__get_image_filename(img_url, res.content)   
+    #     if not image_filename: 
+    #         print("Failed to find image filename")
+    #         return None 
         
-        local_path = os.path.join(self.image_dir, image_filename)
-        try: 
-            with open(local_path, 'wb') as f: 
-                f.write(res.content)
-            return f"file://{os.path.abspath(local_path)}"
-        except: 
-            return None 
+    #     local_path = os.path.join(self.image_dir, image_filename)
+    #     try: 
+    #         with open(local_path, 'wb') as f: 
+    #             f.write(res.content)
+    #         return f"file://{os.path.abspath(local_path)}"
+    #     except: 
+    #         return None 
         
 
     def __get_image_base64_data_from_url(self, image_url: str) -> str:
@@ -132,9 +135,14 @@ class ImageInference:
         if res.status_code != 200:
             raise Exception(f"Failed to fetch image: {res.status_code}")
         
-        mime = res.headers.get("Content-Type", "image/png")
-        base64_data = base64.b64encode(res.content).decode('utf-8')
-        return f"data:{mime};base64,{base64_data}"
+
+        # Only supports png images through base64
+        img = Image.open(io.BytesIO(res.content)).convert("RGB")
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+
+        base64_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return f"data:png;base64,{base64_data}"
 
 
     def __process_image_content(self, images, content):
