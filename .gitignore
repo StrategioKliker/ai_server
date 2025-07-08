@@ -4,3 +4,4 @@ nginx/nginx.conf
 minicpm
 packages.microsoft.*
 env.py
+images/
