@@ -127,7 +127,7 @@ class ImageInference:
             return None 
         
 
-    def __get_image_base64_data_from_url(image_url: str) -> str:
+    def __get_image_base64_data_from_url(self, image_url: str) -> str:
         res = requests.get(image_url, timeout=10)
         if res.status_code != 200:
             raise Exception(f"Failed to fetch image: {res.status_code}")
