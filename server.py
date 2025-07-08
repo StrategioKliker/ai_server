@@ -130,10 +130,16 @@ def send_prompt_task_result(task_id, result, error = None):
     print("Error: ", error, flush=True)
 
     result_url = env.MANAGER_API + env.SEND_PROMPT_RESULT_ROUTE
-    res = requests.post(result_url, data=json.dumps({
-        "task_id": task_id,
-        "prompt_result": result 
-    }))
+    # Symfony backend onyl accepts formdata so we must send it like this
+    payload = {
+        "token": env.PROMPT_TOKEN,
+        "result_json": json.dumps({
+            "task_id": task_id,
+            "prompt_result": result
+        })
+    }
+
+    res = requests.post(result_url, data=payload)
 
     print("Server saving result responded: ", res.content, flush=True )
 

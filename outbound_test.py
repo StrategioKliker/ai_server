@@ -18,7 +18,7 @@ res = requests.post(url, json=payload)
 
 
 payload = {
-    "token": env.PROMPT_API_TOKEN,
+    "token": env.PROMPT_TOKEN,
     "result_json": json.dumps({
         "task_id": 39,
         "prompt_result": {
