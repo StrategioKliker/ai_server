@@ -159,7 +159,7 @@ class ImageInference:
                 print("Skipping unsupported image:", img, flush=True)
                 continue
             
-            print("Reading image from path: ", img_data)
+            # print("Reading image from path: ", img_data)
             content.append({
                 "type": "image_url",
                 "image_url": {"url": img_data}
