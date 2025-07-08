@@ -134,7 +134,7 @@ class ImageInference:
             if os.path.isfile(img):
                 image_path = f"file://{os.path.abspath(img)}"    
             elif img.startswith(("http://", "https://")):
-                image_path = self.__save_image()
+                image_path = self.__save_image(img)
             
             if image_path is None: 
                 print("Skipping unsupported image:", img, flush=True)
