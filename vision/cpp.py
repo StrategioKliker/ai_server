@@ -76,7 +76,7 @@ class ImageInference:
             # -> ggml-model-Q4_K.gguf -> 4-bit -> okay respons, heavier on machine 
             self.llm = Llama.from_pretrained(
                 repo_id="openbmb/MiniCPM-V-2_6-gguf",
-                filename="ggml-model-Q4_K.gguf",
+                filename="ggml-model-Q6_K.gguf",
                 chat_handler=chat_handler,
                 n_ctx=2048, 
                 n_gpu_layers=32,
