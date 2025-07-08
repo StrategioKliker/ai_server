@@ -34,6 +34,8 @@ idna==3.10
     #   requests
 packaging==25.0
     # via huggingface-hub
+pillow==11.3.0
+    # via ai-server (pyproject.toml)
 prometheus-client==0.22.1
     # via prometheus-fastapi-instrumentator
 prometheus-fastapi-instrumentator==7.1.0
