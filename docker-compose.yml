@@ -10,23 +10,44 @@ services:
       timeout: 1s 
       retries: 5
 
-  ollama: 
-    environment: 
-      - OLLAMA_HOST=http://0.0.0.0:11435
-    build: 
-      context: .
-      dockerfile: Dockerfile.ollama
-    ports: 
-      - "11435:11435"
-    volumes: 
-      - ./ollama:/root/.ollama
+  model-server:
+    build: .
+    command: python -m uvicorn model_server:app --host 0.0.0.0 --port 8001
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 60s
+      timeout: 20s
+      retries: 5
+      start_period: 180s
     deploy:
       resources:
         reservations:
           devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+            - capabilities: [gpu]
+
+
+  # ollama: 
+  #   environment: 
+  #     - OLLAMA_HOST=http://0.0.0.0:11435
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile.ollama
+  #   ports: 
+  #     - "11435:11435"
+  #   volumes: 
+  #     - ./ollama:/root/.ollama
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
     # healthcheck:
     #   test: ["CMD", "curl", "-fsS", "http://localhost:11435/api/tags"]
     #   interval: 3s
@@ -36,40 +57,63 @@ services:
 
   app: 
     build: .
-    command: uv run uvicorn server:app --host 0.0.0.0 --port 8000
+    command: python -m uvicorn server:app --host 0.0.0.0 --port 8000
     ports: 
       - "8000:8000"
     environment: 
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_URL=http://ollama:11435/api/generate 
+      - LLAMA_CPP_LOG_LEVEL=error
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     depends_on: 
-      ollama: 
-        condition: service_started 
+      # ollama: 
+      #   condition: service_started 
       redis:
         condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+      
 
-  worker: 
+  worker:
     build: .
-    command: uv run python worker.py 
-    environment: 
+    command: python worker.py
+    environment:
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_URL=http://ollama:11435/api/generate
+      - MODEL_SERVER_URL=http://model-server:8001/infer
+      - LLAMA_CPP_LOG_LEVEL=error
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     depends_on: 
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_started
+      model-server:
+        condition: service_healthy
+      # ollama:
+      #   condition: service_started
     restart: always 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+      
 
   cadvisor: 
     image:  gcr.io/cadvisor/cadvisor:v0.47.2
     ports: 
-      - "8080:8080"
+      - "7071:7071"
     volumes: 
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    command: 
+      - '-port=7071'
 
   prometheus: 
     image: prom/prometheus:latest 
@@ -83,8 +127,9 @@ services:
 
   grafana:
     environment:
-      - GF_SERVER_ROOT_URL=http://127.0.0.1:80/grafana/ 
+      - GF_SERVER_ROOT_URL=http://127.0.0.1:8080/grafana/ 
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_LOG_LEVEL=error  
     image: grafana/grafana:latest
     ports: 
       - "3000:3000"
@@ -108,18 +153,19 @@ services:
       - '--path.sysfs=/host/sys'
       - '--no-collector.filesystem'
 
-  dcgm-exporter: 
-    image: nvidia/dcgm-exporter:latest
-    runtime: nvidia
-    ports:
-      - "9400:9400"
-    cap_add: 
-      - SYS_ADMIN
+  # dcgm-exporter: 
+  #   image: nvidia/dcgm-exporter:latest
+  #   runtime: nvidia
+  #   ports:
+  #     - "9400:9400"
+  #   cap_add: 
+  #     - SYS_ADMIN
 
   nginx:
     image: nginx:latest 
     ports: 
-      - "80:80"
+      - "8080:8080"
+      - "2222:2222"
     volumes: 
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:

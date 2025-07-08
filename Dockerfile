@@ -1,33 +1,31 @@
-# Get python 
-FROM python:3.12-slim 
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
-# GET UV from their base image 
-COPY --from=ghcr.io/astral-sh/uv:0.7.12 /uv /uvx /bin/
-
-# Set workdirectory 
-WORKDIR /app 
-
-# Install system build tools for building native extensions (like llama-cpp-python)
+# Install Python 3.10 and system tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
-    python3-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+    python3.10 python3.10-venv python3.10-dev python3.10-distutils \
+    build-essential cmake git curl wget && \
+    ln -sf /usr/bin/python3.10 /usr/bin/python && \
+    ln -sf /usr/bin/python3.10 /usr/bin/python3 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
-COPY pyproject.toml uv.lock ./
+WORKDIR /app
 
-RUN uv sync --locked
+# Copy precompiled requirements
+COPY requirements.txt .
 
-# Copy source code 
-COPY . . 
+# Install deps (from compiled file + custom index)
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir \
+      llama-cpp-python==0.3.9 \
+      uvicorn \
+      --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
 
-# Expose port 
-EXPOSE 8000 
+# Copy code and model
+COPY minicpm/mmproj-model-f16.gguf /app/minicpm/mmproj-model-f16.gguf
+COPY . .
 
-# Activate venv by putting it in PATH
-ENV PATH="/app/.venv/bin:$PATH"
+EXPOSE 8000
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]

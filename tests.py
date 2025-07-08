@@ -1,19 +1,10 @@
-from vision import ImageInference
+from vision.cpp import ImageInference
 
 def run_vqa_test(prompt, images):
-    test_models = [
-        "minicpm",
-        # "qwen",
-        # "llava-phi", 
-        # "llava-llama3"
-    ]
-
-    for model in test_models: 
-        vision = ImageInference(model)
-
-        anwser = vision.ask(prompt=prompt, images=images)
-        print(f"Model: {model} anwsered: ", anwser)
-        print(f"Time taken: {vision.elapsed_minutes} mins", "\n")
+    vision = ImageInference()
+    anwser = vision.prompt(prompt=prompt, images=images)
+    print("Anwsered: ", anwser)
+    print(f"Time taken: {vision.elapsed_minutes} mins", "\n")
 
 t1_prompt = """
         You are a visual analysis assistant. Analyze the provided image carefully and extract the following information in strict JSON format. Do not include any explanation or extra text. Only return a well-formatted JSON object.
