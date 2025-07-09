@@ -6,8 +6,8 @@ http {
         ""      $remote_addr;
     }
 
-    upstream app { server app:8000; }
-    upstream grafana { server grafana:3000; }
+    upstream app { server 172.28.0.4:8000; }
+    upstream grafana { server 172.28.0.8:3000; }
 
     server {
         listen 0.0.0.0:8080;
@@ -17,7 +17,7 @@ http {
             # Allow local pcs to access
             allow 192.168.0.0/16;
             # Allow the Docker bridge IP for internal Docker access from host
-            allow 172.18.0.1;
+            allow 172.28.0.1;
             # Allow localhost access
             allow 127.0.0.1;
             allow ::1;
@@ -50,7 +50,7 @@ http {
         location /grafana/ {
             # ---- WHITELIST ---- #
             # Allow the Docker bridge IP for internal Docker access from host
-            allow 172.18.0.1;
+            allow 172.28.0.1;
             # Allow localhost access
             allow 127.0.0.1;
 

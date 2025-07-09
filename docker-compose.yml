@@ -1,5 +1,6 @@
 
 services: 
+  
   redis: 
     image: redis:7-bookworm
     volumes: 
@@ -9,6 +10,9 @@ services:
       interval: 3s
       timeout: 1s 
       retries: 5
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.2
 
   model-server:
     build: .
@@ -29,6 +33,9 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.3
 
 
   # ollama: 
@@ -66,6 +73,7 @@ services:
       - LLAMA_CPP_LOG_LEVEL=error
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - MODEL_SERVER_IP=172.28.0.3
     depends_on: 
       # ollama: 
       #   condition: service_started 
@@ -76,6 +84,9 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.4
       
 
   worker:
@@ -88,6 +99,7 @@ services:
       - LLAMA_CPP_LOG_LEVEL=error
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - MODEL_SERVER_IP=172.28.0.3
     depends_on: 
       redis:
         condition: service_healthy
@@ -105,6 +117,9 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.5
       
 
   cadvisor: 
@@ -118,6 +133,9 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     command: 
       - '-port=7071'
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.6
 
   prometheus: 
     image: prom/prometheus:latest 
@@ -128,6 +146,9 @@ services:
     command: ["--config.file=/etc/prometheus/prometheus.yml"]
     depends_on: 
       - cadvisor
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.7
 
   grafana:
     environment:
@@ -142,6 +163,9 @@ services:
     volumes: 
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.8
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -156,6 +180,9 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - '--no-collector.filesystem'
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.9
 
   # dcgm-exporter: 
   #   image: nvidia/dcgm-exporter:latest
@@ -175,7 +202,17 @@ services:
     depends_on:
       - app 
       - grafana 
+    networks: 
+      ai_net: 
+        ipv4_address: 172.28.0.10
 
 volumes: 
   redis_data:
   grafana_data:
+
+networks: 
+  ai_net: 
+    driver: bridge 
+    ipam: 
+      config: 
+        - subnet: 172.28.0.0/16
