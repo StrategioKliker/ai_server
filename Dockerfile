@@ -18,7 +18,7 @@ COPY requirements.txt .
 # Install deps (from compiled file + custom index)
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir --upgrade \
-      llama-cpp-python==0.3.9+cu124 \
+      llama-cpp-python==0.3.9 \
       --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 && \
     pip install --no-cache-dir uvicorn
 
