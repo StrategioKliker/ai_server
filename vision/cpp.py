@@ -81,12 +81,14 @@ class ImageInference:
                 filename="ggml-model-Q8_0.gguf",
                 chat_handler=chat_handler,
                 n_ctx=2048, 
-                n_gpu_layers=20,
+                n_gpu_layers=2,
                 main_gpu=0,     
                 gpu_mlock=True  
             )
 
         print("Model loaded", flush=True)
+        print("GPU used:", self.llm._params.n_gpu_layers > 0, flush=True)
+
 
 
     # def __get_image_filename(self, img_url: str, img_content: bytes) -> Union[str, None]:
