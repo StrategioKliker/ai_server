@@ -87,7 +87,7 @@ class ImageInference:
             )
 
         print("Model loaded", flush=True)
-        print("GPU used:", self.llm._params.n_gpu_layers > 0, flush=True)
+        print("GPU used:", self.llm.model_params.n_gpu_layers > 0, flush=True)
 
 
 
