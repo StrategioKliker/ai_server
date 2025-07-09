@@ -86,6 +86,8 @@ class ImageInference:
                 gpu_mlock=True  
             )
 
+        print("Model loaded", flush=True)
+
 
     # def __get_image_filename(self, img_url: str, img_content: bytes) -> Union[str, None]:
     #     img_path = urlparse(img_url).path
