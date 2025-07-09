@@ -17,10 +17,13 @@ COPY requirements.txt .
 
 # Install deps (from compiled file + custom index)
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir \
-      llama-cpp-python==0.3.9 \
-      uvicorn \
-      --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
+    pip install --no-cache-dir --upgrade \
+      llama-cpp-python==0.3.9+cu124 \
+      --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 && \
+    pip install --no-cache-dir uvicorn
+
+# Confirm if using gpu
+RUN python -c "from llama_cpp import Llama; print('🔥 CUDA Build:', 'n_gpu_layers' in Llama.__init__.__code__.co_varnames)"
 
 # Copy code and model
 COPY minicpm/mmproj-model-f16.gguf /app/minicpm/mmproj-model-f16.gguf
