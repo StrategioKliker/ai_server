@@ -1,6 +1,7 @@
 import os
 import env 
 import json
+import socket 
 import requests
 import traceback
 from rq import Queue
@@ -55,7 +56,11 @@ def ping():
     return {"ping": "pong"}
 
 
-MODEL_SERVER_URL = os.getenv("MODEL_SERVER_URL", "http://localhost:8001/infer")
+# Ping local IP instead of spamming docker DNS 
+model_server_ip = socket.gethostbyname('model-server')
+model_server_url = f"http://{model_server_ip}:8001/infer"
+# MODEL_SERVER_URL = os.getenv("MODEL_SERVER_URL", "http://localhost:8001/infer")
+
 
 def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_schema):
     print("Running vision inference for request id:", task_id, flush=True)
@@ -67,8 +72,10 @@ def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_s
             response = None
             with visual_inference_duration_in_seconds.time():
                 try:
-                    res = requests.post(
-                        MODEL_SERVER_URL,
+                    session = requests.Session()
+
+                    res = session.post(
+                        model_server_url,
                         json={"prompt": prompt, "images": images, "system_prompt": system_prompt},
                         timeout=600,
                     )

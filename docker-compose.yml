@@ -101,6 +101,10 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
       
 
   cadvisor: 
