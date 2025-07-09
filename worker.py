@@ -9,7 +9,7 @@ class LazyWorker(Worker):
     def execute_job(self, job, queue):
         super().execute_job(job, queue)
         if job.is_finished:
-            print("[WORKER] Job completed, taking a nap...")
+            print("[WORKER] Job completed, taking a nap...", flush=True)
             sleep(10)
 
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
             worker = LazyWorker([queue], connection=conn)
             worker.work()
         except ConnectionError as e: 
-            print(f"[WORKER] Redis unavailable, retrying in 2s... ({e})")
+            print(f"[WORKER] Redis unavailable, retrying in 2s... ({e})", flush=True)
             sleep(2)
 
 
