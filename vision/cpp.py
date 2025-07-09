@@ -81,7 +81,7 @@ class ImageInference:
                 filename="ggml-model-Q6_K.gguf",
                 chat_handler=chat_handler,
                 n_ctx=2048, 
-                n_gpu_layers=2,
+                n_gpu_layers=8,
                 main_gpu=0,     
                 gpu_mlock=True  
             )
