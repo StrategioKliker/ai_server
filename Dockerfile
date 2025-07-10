@@ -20,19 +20,19 @@ RUN pip install --no-cache-dir -r requirements.txt || true
 RUN pip install --no-cache-dir uvicorn
 
 # --- Build llama-cpp-python with CUDA ---
-# Clone llama.cpp and build libllama with CUDA + MMQ
-RUN git clone https://github.com/ggerganov/llama.cpp.git && \
-    mkdir -p llama.cpp/build && cd llama.cpp/build && \
-    cmake .. -DLLAMA_CUBLAS=on -DLLAMA_CUDA_FORCE_MMQ=on && \
-    make -j
+# Install CUDA toolkit & build essentials
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      cuda-toolkit-12-4 python3-dev build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-# Clone llama-cpp-python, point it to the local libllama
-RUN git clone https://github.com/abetlen/llama-cpp-python.git && \
-    cd llama-cpp-python && \
-    CMAKE_ARGS="-DLLAMA_CUBLAS=on -DLLAMA_CUDA_FORCE_MMQ=on" \
-    LLAMA_CPP_LIB_DIR=/app/llama.cpp/build \
-    pip install . --no-cache-dir
-
+# Reinstall llama-cpp-python with GPU flags
+RUN CUDACXX=/usr/local/cuda/bin/nvcc \
+    CMAKE_ARGS="-DGGML_CUDA=on -DLLAMA_CUDA_FORCE_MMQ=on" \
+    FORCE_CUDA=1 \
+    pip install llama-cpp-python==0.3.9 \
+      --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 \
+      --force-reinstall --no-cache-dir
+      
 # Confirm if using gpu
 RUN python -c "from llama_cpp import Llama; print('🔥 CUDA Build:', 'n_gpu_layers' in Llama.__init__.__code__.co_varnames)"
 
