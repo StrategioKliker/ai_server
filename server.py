@@ -59,6 +59,10 @@ def ping():
 
 _model_server_ip = None 
 def _get_model_server_url() -> str: 
+    env_url = os.getenv("MODEL_SERVER_URL")
+    if env_url:
+        return env_url
+
     global _model_server_ip
     if _model_server_ip is None:
         _model_server_ip = dns.resolve('model-server')
