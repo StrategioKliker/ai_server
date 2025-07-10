@@ -88,7 +88,16 @@ class ImageInference:
                 n_ctx=2048, 
                 n_gpu_layers=-1,
                 main_gpu=0,     
-                gpu_mlock=True  
+                gpu_mlock=True,
+
+                # ↓–– default generation params ↓––
+                temperature=0.0,        # pure greedy
+                top_p=1.0,              # don’t cut off the distribution
+                top_k=1,                # force highest‐prob token
+                repeat_penalty=1.0,     # no repeat boosting
+                typical_p=1.0,          # no typical sampling
+                mirostat_mode=0,        # off (greedy)
+                #–– end defaults
             )
 
         print("Model loaded", flush=True)
