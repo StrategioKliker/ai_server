@@ -108,8 +108,7 @@ class ImageInference:
 
         base64_data = base64.b64encode(buf.getvalue()).decode("utf-8")
         return f"data:png;base64,{base64_data}"
-
-
+    
     def __process_image_content(self, images, content):
         image_found = False 
         for img in images:
@@ -118,7 +117,15 @@ class ImageInference:
             if os.path.isfile(img):
                 img_data = f"file://{os.path.abspath(img)}"    
             elif img.startswith(("http://", "https://")):
-                img_data = self.__get_image_base64_data_from_url(img)
+                res = requests.get(img, timeout=10)
+                res.raise_for_status()
+
+                name_hash = hashlib.md5(img.encode()).hexdigest()
+                save_path = os.path.join(self.image_dir, f"{name_hash}.png")                
+                with Image.open(io.BytesIO(res.content)).convert("RGB") as im:
+                    im.save(save_path, format="PNG")
+
+                img_data = f"file://{os.path.abspath(save_path)}"    
             
             if img_data is None: 
                 print("Skipping unsupported image:", img, flush=True)
