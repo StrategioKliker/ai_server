@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
 from vision.cpp import ImageInference
+from typing import List, Optional, Dict, Any
 
 app = FastAPI()
 
@@ -12,7 +12,7 @@ class InferenceRequest(BaseModel):
     prompt: str
     system_prompt: str 
     images: List[str]
-    expected_json_schema: dict 
+    expected_json_schema: Optional[Dict[str, Any]] = None 
 
 class InferenceResponse(BaseModel):
     result: dict | None
