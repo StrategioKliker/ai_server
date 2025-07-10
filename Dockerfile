@@ -20,12 +20,19 @@ RUN pip install --no-cache-dir -r requirements.txt || true
 RUN pip install --no-cache-dir uvicorn
 
 # --- Build llama-cpp-python with CUDA ---
+# Clone llama.cpp and build libllama with CUDA + MMQ
+RUN git clone https://github.com/ggerganov/llama.cpp.git && \
+    mkdir -p llama.cpp/build && cd llama.cpp/build && \
+    cmake .. -DLLAMA_CUBLAS=on -DLLAMA_CUDA_FORCE_MMQ=on && \
+    make -j
+
+# Clone llama-cpp-python, point it to the local libllama
 RUN git clone https://github.com/abetlen/llama-cpp-python.git && \
     cd llama-cpp-python && \
     CMAKE_ARGS="-DLLAMA_CUBLAS=on -DLLAMA_CUDA_FORCE_MMQ=on" \
-    FORCE_CUDA=1 \
+    LLAMA_CPP_LIB_DIR=/app/llama.cpp/build \
     pip install . --no-cache-dir
-    
+
 # Confirm if using gpu
 RUN python -c "from llama_cpp import Llama; print('🔥 CUDA Build:', 'n_gpu_layers' in Llama.__init__.__code__.co_varnames)"
 
