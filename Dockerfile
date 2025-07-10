@@ -29,7 +29,6 @@ ENV CUDACXX=/usr/local/cuda/bin/nvcc
 RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/x86_64-linux-gnu/libcuda.so && \
     ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/x86_64-linux-gnu/libcuda.so.1
 
-
 RUN pip install --no-cache-dir llama-cpp-python==0.3.9 \
     --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 \
     --force-reinstall
