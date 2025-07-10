@@ -77,7 +77,7 @@ class ImageInference:
             self.llm = Llama.from_pretrained(
                 repo_id="openbmb/MiniCPM-V-2_6-gguf",
                 # F16 is full blown model
-                filename="mmproj-model-f16.gguf",
+                filename="ggml-model-f16.gguf",
                 # filename="ggml-model-Q6_K.gguf",
                 chat_handler=chat_handler,
                 n_ctx=2048, 
