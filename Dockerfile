@@ -25,6 +25,11 @@ ENV CMAKE_ARGS="-DLLAMA_CUDA=on -DLLAMA_CUDA_FORCE_MMQ=on"
 ENV FORCE_CUDA=1
 ENV CUDACXX=/usr/local/cuda/bin/nvcc
 
+# Link stub CUDA driver libs to fool the linker
+RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/x86_64-linux-gnu/libcuda.so && \
+    ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/x86_64-linux-gnu/libcuda.so.1
+
+
 RUN pip install --no-cache-dir llama-cpp-python==0.3.9 \
     --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 \
     --force-reinstall
