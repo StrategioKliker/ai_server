@@ -80,6 +80,7 @@ class ImageInference:
                 filename="ggml-model-f16.gguf",
                 # filename="ggml-model-Q6_K.gguf",
                 chat_handler=chat_handler,
+                n_threads=os.cpu_count(),
                 n_ctx=2048, 
                 n_gpu_layers=-1,
                 main_gpu=0,     
