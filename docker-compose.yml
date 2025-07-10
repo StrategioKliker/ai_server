@@ -34,6 +34,8 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
     networks: 
       ai_net: 
         ipv4_address: 172.28.0.3
