@@ -223,6 +223,8 @@ class ImageInference:
             for key, value in result.items(): 
                 if key not in result_value_counter: 
                     result_value_counter[key] = {}
+                    
+                if value not in result_value_counter[key]:
                     result_value_counter[key][value] = 1
                 else:
                     result_value_counter[key][value] += 1
