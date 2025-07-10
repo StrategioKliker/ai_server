@@ -10,7 +10,7 @@ class LazyWorker(Worker):
         super().execute_job(job, queue)
         if job.is_finished:
             print("[WORKER] Job completed, taking a nap...", flush=True)
-            sleep(10)
+            sleep(5)
 
 
 listen = ['default']
