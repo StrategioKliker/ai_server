@@ -15,7 +15,7 @@ class InferenceRequest(BaseModel):
     expected_json_schema: dict 
 
 class InferenceResponse(BaseModel):
-    result: str | None
+    result: dict | None
 
 @app.post("/infer", response_model=InferenceResponse)
 def infer(req: InferenceRequest):
