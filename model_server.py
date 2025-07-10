@@ -12,13 +12,14 @@ class InferenceRequest(BaseModel):
     prompt: str
     system_prompt: str 
     images: List[str]
+    expected_json_schema: dict 
 
 class InferenceResponse(BaseModel):
     result: str | None
 
 @app.post("/infer", response_model=InferenceResponse)
 def infer(req: InferenceRequest):
-    result = model.prompt(req.prompt, req.system_prompt, req.images)
+    result = model.prompt(req.prompt, req.system_prompt, req.images, req.expected_json_schema)
     return {"result": result}
 
 @app.get("/health")

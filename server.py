@@ -86,7 +86,7 @@ def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_s
 
                     res = session.post(
                         model_server_url,
-                        json={"prompt": prompt, "images": images, "system_prompt": system_prompt},
+                        json={"prompt": prompt, "images": images, "system_prompt": system_prompt, "expected_json_schema": expected_json_schema},
                         timeout=600,
                     )
                     res.raise_for_status()
@@ -104,20 +104,7 @@ def run_vision_inference(prompt, system_prompt, images, task_id, expected_json_s
                 sleep(5)
                 continue
 
-            extracted_json = extract_json_from_str(response)
-            if not extracted_json:
-                inference_attempts -= 1
-                print(f"Failed to extract JSON, attempts left: {inference_attempts}", flush=True)
-                sleep(5)
-                continue
-
-            if expected_json_schema and not is_valid_json(expected_json_schema, extracted_json):
-                inference_attempts -= 1
-                print(f"JSON validation failed, attempts left: {inference_attempts}", flush=True)
-                sleep(5)
-                continue
-
-            json_result = extracted_json
+            json_result = response
             break
 
         if json_result is None:

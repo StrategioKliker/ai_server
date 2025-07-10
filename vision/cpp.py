@@ -7,11 +7,15 @@ import imghdr
 import hashlib
 import requests
 import filetype 
+
 from PIL import Image 
-from datetime import datetime
+from time import sleep
 from llama_cpp import Llama
+from datetime import datetime
 from typing import List, Union
+from jsonz.validator import is_valid_json
 from urllib.parse import urlparse, unquote
+from jsonz.extractor import extract_json_from_str
 from llama_cpp.llama_chat_format import MiniCPMv26ChatHandler
 
 
@@ -77,8 +81,8 @@ class ImageInference:
             self.llm = Llama.from_pretrained(
                 repo_id="openbmb/MiniCPM-V-2_6-gguf",
                 # F16 is full blown model
-                filename="ggml-model-f16.gguf",
-                # filename="ggml-model-Q6_K.gguf",
+                #filename="ggml-model-f16.gguf",
+                filename="ggml-model-Q6_K.gguf",
                 chat_handler=chat_handler,
                 n_threads=os.cpu_count(),
                 n_ctx=2048, 
@@ -90,52 +94,6 @@ class ImageInference:
         print("Model loaded", flush=True)
         print("GPU used:", self.llm.model_params.n_gpu_layers > 0, flush=True)
 
-
-
-    # def __get_image_filename(self, img_url: str, img_content: bytes) -> Union[str, None]:
-    #     img_path = urlparse(img_url).path
-    #     img_url_base = unquote(img_path.rsplit('/', 1)[-1])
-    #     img_url_base = img_url_base or ''
-    #     img_url_base = img_url_base.rsplit('.', 1)[0]
-    #     if not img_url_base or len(img_url_base) < 3: 
-    #         img_url_base = f"img_{hashlib.sha256(img_content).hexdigest()[:12]}"
-
-
-    #     common_suffix = (".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".webp", ".svg", ".ico", ".heic", ".avif", ".jfif", ".apng" )
-    #     for suffix in common_suffix: 
-    #         if img_url.lower().endswith(suffix): 
-    #             suffix = suffix.lstrip('.')
-    #             return f"{img_url_base}.{suffix}"
-
-    #     img_kind = imghdr.what(None, img_content)
-    #     if img_kind:
-    #         return f"{img_url_base}.{img_kind}"
-        
-    #     img_info = filetype.guess(img_content)
-    #     if img_info: 
-    #         return f"{img_url_base}.{img_info.extension}"
-        
-    #     return None 
-
-    # def __save_image(self, img_url: str) -> Union[str, None]:
-    #     res = requests.get(img_url, timeout=60)
-    #     if res is None or res.status_code != 200: 
-    #         print("Failed to get image on url: ", img_url, " with response: ", res.status_code)
-    #         return None 
-        
-    #     image_filename = self.__get_image_filename(img_url, res.content)   
-    #     if not image_filename: 
-    #         print("Failed to find image filename")
-    #         return None 
-        
-    #     local_path = os.path.join(self.image_dir, image_filename)
-    #     try: 
-    #         with open(local_path, 'wb') as f: 
-    #             f.write(res.content)
-    #         return f"file://{os.path.abspath(local_path)}"
-    #     except: 
-    #         return None 
-        
 
     def __get_image_base64_data_from_url(self, image_url: str) -> str:
         res = requests.get(image_url, timeout=10)
@@ -180,7 +138,7 @@ class ImageInference:
         return content      
 
 
-    def prompt(self, prompt: str, system_prompt: Union[str, None], images: List[str]) -> Union[str, None]:
+    def prompt(self, prompt: str, system_prompt: Union[str, None], images: List[str], expected_json_schema: dict) -> Union[str, None]:
         print("Running prompt", flush=True)
         if not prompt or not isinstance(prompt, str) or not images:
             print("Invalid prompt or images", flush=True)
@@ -195,7 +153,6 @@ class ImageInference:
             return None         
 
         # Run the model
-        start = datetime.now()
         messages=[
             {"role": "user", "content": content},
         ] 
@@ -205,16 +162,89 @@ class ImageInference:
                 'role': 'system', 'content': system_prompt
             })
 
-        try:
-            res = self.llm.create_chat_completion(
-                messages = messages,
-                response_format={
-                    "type": "json_object",
-                }, 
-            )
-            self.elapsed_minutes = (datetime.now() - start).total_seconds() / 60
-            print("Result in cpp: ", res["choices"][0]["message"]["content"])
-            return res["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            print("LLM inference error:", e, flush=True)
-            return None
+        return self.__get_inference_result(messages, expected_json_schema)
+
+    def __get_inference_result(self, messages, expected_json_schema, repeat_target=3):
+        repeat_count = 0
+
+        repeated_results = []
+
+        repeat_count_target = repeat_target * 3
+        while repeat_count < repeat_count_target:
+            try:
+                start = datetime.now()
+                res = self.llm.create_chat_completion(
+                    messages = messages,
+                    response_format={
+                        "type": "json_object",
+                    }, 
+                )
+                self.elapsed_minutes = (datetime.now() - start).total_seconds() / 60
+                print("Result in cpp: ", res["choices"][0]["message"]["content"])
+                result = res["choices"][0]["message"]["content"].strip()
+
+                extracted_json = extract_json_from_str(result)
+                if not extracted_json:
+                    repeat_count += 1
+                    print(f"Failed to extract JSON, repeat step: {repeat_count}", flush=True)
+                    sleep(2)
+                    continue
+
+                if expected_json_schema and not is_valid_json(expected_json_schema, extracted_json):
+                    repeat_count += 1
+                    print(f"JSON validation failed, repeat step: {repeat_count}", flush=True)
+                    sleep(2)
+                    continue
+
+                repeated_results.append(extracted_json)
+                repeat_count += 1      
+
+                if len(repeated_results) >= repeat_target: 
+                    break 
+
+            except Exception as e:
+                print("LLM inference error:", e, flush=True)
+                repeat_count += 1 
+                sleep(2)
+                continue
+
+        if len(repeated_results) == 0:
+            return None 
+        
+        return self.__reconcile_result(repeated_results)
+
+
+    def __reconcile_result(self, repeated_results: List[dict]):
+        result_value_counter = {}
+
+        print("---------- Reconciling results: ---------")
+        for result in repeated_results: 
+            print("Result: ", result)
+            for key, value in result.items(): 
+                if key not in result_value_counter: 
+                    result_value_counter[key] = {}
+                    result_value_counter[key][value] = 1
+                else:
+                    result_value_counter[key][value] += 1
+                
+        final_result = {}
+        for key, value_count in result_value_counter.items(): 
+            winner_value = None 
+            winner_count = 0
+            for value, count in value_count.items(): 
+                if winner_value is None or (value != winner_value and count > winner_count): 
+                    winner_value = value 
+                    winner_count = count 
+            
+            final_result[key] = winner_value
+
+        if len(final_result) == 0:
+            return None 
+        
+        print("~=[FINAL RESULT:]=~ ")
+        print(final_result)
+
+        print("---------- Reconciling finished ---------")
+        return final_result
+
+
