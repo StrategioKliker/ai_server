@@ -18,6 +18,21 @@ def init_projector_if_not_exists():
     download_stream(url, proj_path)
     return proj_path
 
+def init_projector_o_if_not_exists():
+    os.makedirs('minicpm-o', exist_ok=True)
+    proj_path = os.path.join('minicpm-o', "mmproj-model-f16.gguf")
+    if os.path.isfile(proj_path):
+        print(f"Projector model already at {proj_path}")
+        return proj_path
+
+    print("⬇️  Downloading projector model…")
+    url = (
+        "https://huggingface.co/openbmb/MiniCPM-o-2_6-gguf/resolve/"
+        "main/mmproj-model-f16.gguf"
+    )
+    download_stream(url, proj_path)
+    return proj_path
+
 def init_main_model_if_not_exists():
     os.makedirs('minicpm', exist_ok=True)
     model_path = os.path.join('minicpm', "ggml-model-f16.gguf")
@@ -29,6 +44,22 @@ def init_main_model_if_not_exists():
     url = (
         "https://huggingface.co/openbmb/MiniCPM-V-2_6-gguf/resolve/"
         "main/ggml-model-f16.gguf"
+    )
+    download_stream(url, model_path)
+    return model_path
+
+
+def init_main_model_o_if_not_exists():
+    os.makedirs('minicpm-o', exist_ok=True)
+    model_path = os.path.join('minicpm-o', "mmproj-model-f16.gguf")
+    if os.path.isfile(model_path):
+        print(f"Main model already at {model_path}")
+        return model_path
+
+    print("⬇️  Downloading main MiniCPM model…")
+    url = (
+        "https://huggingface.co/openbmb/MiniCPM-o-2_6-gguf/resolve/"
+        "main/Model-7.6B-Q6_K.gguf"
     )
     download_stream(url, model_path)
     return model_path
@@ -58,3 +89,6 @@ def download_stream(url: str, dest: str):
 if __name__ == "__main__":
     init_projector_if_not_exists()
     init_main_model_if_not_exists()
+
+    init_projector_o_if_not_exists()
+    init_main_model_o_if_not_exists()
