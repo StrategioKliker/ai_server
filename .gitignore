@@ -2,6 +2,7 @@ __pycache__
 ollama
 nginx/nginx.conf
 minicpm
+minicpm-o
 packages.microsoft.*
 env.py
 images/
