@@ -205,17 +205,18 @@ class ImageInference:
                 if not isinstance(extracted_json, dict):
                     repeat_count += 1
                     print(f"⚠️ Failed to extract JSON — retrying ({repeat_count})")
-                    sleep(2)
+                    sleep(5)
                     continue
 
                 if len(extracted_json) > 0 and expected_json_schema and not is_valid_json(expected_json_schema, extracted_json):
                     repeat_count += 1
                     print(f"⚠️ JSON validation failed — retrying ({repeat_count})")
-                    sleep(2)
+                    sleep(5)
                     continue
 
                 repeated_results.append(extracted_json)
                 repeat_count += 1
+                sleep(2)
 
                 if len(repeated_results) >= repeat_target:
                     break
