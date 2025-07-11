@@ -49,9 +49,10 @@ def init_main_model_if_not_exists():
     return model_path
 
 
+# https://huggingface.co/openbmb/MiniCPM-o-2_6-gguf?library=llama-cpp-python
 def init_main_model_o_if_not_exists():
     os.makedirs('minicpm-o', exist_ok=True)
-    model_path = os.path.join('minicpm-o', "mmproj-model-f16.gguf")
+    model_path = os.path.join('minicpm-o', "Model-7.6B-Q6_K.gguf")
     if os.path.isfile(model_path):
         print(f"Main model already at {model_path}")
         return model_path
