@@ -183,13 +183,13 @@ class ImageInference:
                 extracted_json = extract_json_from_str(result)
                 print("Extracted: ", extracted_json)
                 print("Type: ", type(extracted_json))
-                if not extracted_json:
+                if not isinstance(extracted_json, dict):
                     repeat_count += 1
                     print(f"⚠️ Failed to extract JSON — retrying ({repeat_count})")
                     sleep(2)
                     continue
 
-                if expected_json_schema and not is_valid_json(expected_json_schema, extracted_json):
+                if len(extracted_json) > 0 and expected_json_schema and not is_valid_json(expected_json_schema, extracted_json):
                     repeat_count += 1
                     print(f"⚠️ JSON validation failed — retrying ({repeat_count})")
                     sleep(2)
