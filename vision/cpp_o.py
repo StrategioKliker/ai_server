@@ -181,6 +181,8 @@ class ImageInference:
                 print("Result:", result)
 
                 extracted_json = extract_json_from_str(result)
+                print("Extracted: ", extracted_json)
+                print("Type: ", type(extracted_json))
                 if not extracted_json:
                     repeat_count += 1
                     print(f"⚠️ Failed to extract JSON — retrying ({repeat_count})")
