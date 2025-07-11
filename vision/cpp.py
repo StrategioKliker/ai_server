@@ -92,7 +92,7 @@ class ImageInference:
                 chat_handler=chat_handler,
                 n_threads=os.cpu_count(),
                 n_ctx=4096, 
-                n_gpu_layers=12,
+                n_gpu_layers=8,
                 main_gpu=0,     
                 gpu_mlock=False,
 
