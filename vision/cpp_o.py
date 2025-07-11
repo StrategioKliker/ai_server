@@ -16,12 +16,17 @@ from llama_cpp.llama_chat_format import register_chat_format, ChatFormatterRespo
 
 @register_chat_format("minicpm-o-2_6")
 class MiniCPMo26ChatHandler:
-    def __init__(self, clip_model_path: str = None):
+    def __init__(self, clip_model_path: str = None, verbose=False):
         if clip_model_path is None or not os.path.isfile(clip_model_path):
             raise ValueError("A valid clip_model_path is required for MiniCPM-o-2_6.")
         self.clip_model_path = clip_model_path
+        self.verbose = verbose
 
-    def __call__(self, messages: List[Dict], llama=None) -> ChatFormatterResponse:
+    def __call__(self, **kwargs) -> ChatFormatterResponse:
+        messages: List[Dict] = kwargs.get("messages", [])
+        llama = kwargs.get("llama", None)
+        # you can also access tools, functions, etc. if needed
+
         prompt = ""
         images = []
 
@@ -30,13 +35,13 @@ class MiniCPMo26ChatHandler:
             content = msg["content"]
 
             if role == "system":
-                continue  # system prompts not used
+                continue
 
             if role == "user":
                 prompt += "<|user|>\n"
                 for part in content:
                     if part["type"] == "text":
-                        prompt += part["text"] + "\n"
+                        prompt += part["text"].strip() + "\n"
                     elif part["type"] == "image_url":
                         img_url = part["image_url"]["url"]
                         if not img_url.startswith("file://"):
@@ -46,12 +51,14 @@ class MiniCPMo26ChatHandler:
                         prompt += "<image>\n"
 
             elif role == "assistant":
-                prompt += "<|assistant|>\n" + content + "\n"
+                prompt += "<|assistant|>\n" + content.strip() + "\n"
 
         prompt += "<|assistant|>\n"
 
-        return [{"prompt": prompt, "images": images}]
+        if self.verbose:
+            print(f"[MiniCPMo26ChatHandler] Final prompt:\n{prompt}", file=sys.stderr)
 
+        return [{"prompt": prompt, "images": images}]
 class suppress_stdout(object):
     def __enter__(self):
         self.outnull_file = open(os.devnull, 'w')
