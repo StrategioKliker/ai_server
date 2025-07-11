@@ -91,16 +91,16 @@ class ImageInference:
 
                 chat_handler=chat_handler,
                 n_threads=os.cpu_count(),
-                n_ctx=2048, 
+                n_ctx=4096, 
                 n_gpu_layers=12,
                 main_gpu=0,     
-                gpu_mlock=True,
+                gpu_mlock=False,
 
                 # ↓–– default generation params ↓––
                 temperature=0.0,        # pure greedy
                 top_p=1.0,              # don’t cut off the distribution
                 top_k=1,                # force highest‐prob token
-                repeat_penalty=1.2,     # no repeat boosting
+                repeat_penalty=1.6,     # no repeat boosting
                 typical_p=1.0,          # no typical sampling
                 mirostat_mode=0,        # off (greedy)
                 #–– end defaults
