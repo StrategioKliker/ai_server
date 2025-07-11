@@ -64,9 +64,9 @@ class ImageInference:
 
         print("Loading MiniCPM model with multimodal support…", flush=True)
         #  Ensure projector exists (correct GGUF file)
-        projector_dir = "minicpm"
-        self._projector_path = os.path.join(projector_dir, "mmproj-model-f16.gguf")
-        os.makedirs(projector_dir, exist_ok=True)
+        minicpm_dir = "minicpm"
+        self._projector_path = os.path.join(minicpm_dir, "mmproj-model-f16.gguf")
+        os.makedirs(minicpm_dir, exist_ok=True)
 
         with suppress_stdout():
             #  Setup chat handler and model
@@ -78,11 +78,17 @@ class ImageInference:
             # Tested 
             # -> ggml-model-Q2_K.gguf -> 2-bit , okay response, not too heavy on machine
             # -> ggml-model-Q4_K.gguf -> 4-bit -> okay respons, heavier on machine 
-            self.llm = Llama.from_pretrained(
-                repo_id="openbmb/MiniCPM-V-2_6-gguf",
+            model_path = os.path.join(minicpm_dir, 'ggml-model-f16.gguf')
+
+            self.llm = Llama(
+                # repo_id="openbmb/MiniCPM-V-2_6-gguf",
                 # F16 is full blown model
-                filename="ggml-model-f16.gguf",
+                # filename="ggml-model-f16.gguf",
                 #filename="ggml-model-Q6_K.gguf",
+
+                # Switched to local model download 
+                model_path=model_path,
+
                 chat_handler=chat_handler,
                 n_threads=os.cpu_count(),
                 n_ctx=2048, 
