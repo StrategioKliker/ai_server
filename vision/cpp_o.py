@@ -101,7 +101,7 @@ class ImageInference:
                 chat_handler=chat_handler,
                 chat_format="minicpm-o-2_6",
                 n_threads=os.cpu_count(),
-                n_ctx=2048,
+                n_ctx=4068,
                 n_gpu_layers=12,
                 main_gpu=0,
                 gpu_mlock=True,
@@ -174,7 +174,7 @@ class ImageInference:
                 start = datetime.now()
                 res = self.llm.create_chat_completion(
                     messages=messages,
-                    response_format={"type": "json_object"},
+                    # response_format={"type": "json_object"},
                 )
                 self.elapsed_minutes = (datetime.now() - start).total_seconds() / 60
                 result = res["choices"][0]["message"]["content"].strip()
