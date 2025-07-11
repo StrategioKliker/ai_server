@@ -102,7 +102,7 @@ class ImageInference:
                 chat_format="minicpm-o-2_6",
                 n_threads=os.cpu_count(),
                 n_ctx=4068,
-                n_gpu_layers=-1,
+                n_gpu_layers=8,
                 main_gpu=0,
                 gpu_mlock=True,
                 temperature=0.0,
