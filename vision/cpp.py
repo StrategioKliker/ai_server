@@ -100,7 +100,7 @@ class ImageInference:
                 temperature=0.0,        # pure greedy
                 top_p=1.0,              # don’t cut off the distribution
                 top_k=1,                # force highest‐prob token
-                repeat_penalty=1.6,     # no repeat boosting
+                repeat_penalty=1.9,     # no repeat boosting
                 typical_p=1.0,          # no typical sampling
                 mirostat_mode=0,        # off (greedy)
                 #–– end defaults
