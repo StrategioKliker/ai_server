@@ -14,6 +14,8 @@ from jsonz.validator import is_valid_json
 from jsonz.extractor import extract_json_from_str
 from llama_cpp.llama_chat_format import register_chat_format, Llava15ChatHandler
 
+# ----------- Chat handler ----------- 
+# No official support for this yet 
 @register_chat_format("minicpm-o-2_6")
 class MiniCPMo26ChatHandler(Llava15ChatHandler):
     DEFAULT_SYSTEM_MESSAGE = None
@@ -77,6 +79,8 @@ class suppress_stdout(object):
 
 class ImageInference:
     def __init__(self):
+        self._saved_image_path = None 
+
         self.elapsed_minutes = 0
 
         self.image_dir = 'images'
@@ -116,6 +120,16 @@ class ImageInference:
         print("Model loaded ✔️", flush=True)
         print("GPU used:", self.llm.model_params.n_gpu_layers > 0, flush=True)
 
+    def __cleanup_images(self):
+        if self._saved_image_path is None or not os.path.isfile(self._saved_image_path): 
+            return 
+        
+        try: 
+            os.remove(self._saved_image_path)
+            print(f"Deleted temporary image: {self._saved_image_path}", flush=True)
+        except Exception as e:
+            print(f"Failed to delete image {self._saved_image_path}: {e}", flush=True) 
+
     def __process_image_content(self, images, content):
         image_found = False
         for img in images:
@@ -132,7 +146,8 @@ class ImageInference:
                 with Image.open(io.BytesIO(res.content)).convert("RGB") as im:
                     im.save(save_path, format="PNG")
 
-                img_data = f"file://{os.path.abspath(save_path)}"
+                self._saved_image_path = os.path.abspath(save_path)
+                img_data = f"file://{self._saved_image_path}"
 
             if img_data is None:
                 print("Skipping unsupported image:", img, flush=True)
@@ -162,7 +177,11 @@ class ImageInference:
         if system_prompt:
             messages.insert(0, {"role": "system", "content": system_prompt})
 
-        return self.__get_inference_result(messages, expected_json_schema)
+        result = self.__get_inference_result(messages, expected_json_schema)
+
+        self.__cleanup_images()
+
+        return result 
 
     def __get_inference_result(self, messages, expected_json_schema, repeat_target=5):
         repeat_count = 0
@@ -227,7 +246,7 @@ class ImageInference:
             for key, value_count in result_value_counter.items()
         }
 
-        print("✅ Final result:")
+        print("Final result:")
         print(final_result)
         print("----------------------------------------")
         return final_result
