@@ -108,7 +108,7 @@ class ImageInference:
                 temperature=0.0,
                 top_p=1.0,
                 top_k=1,
-                repeat_penalty=1.2,
+                repeat_penalty=1.6,
                 typical_p=1.0,
                 mirostat_mode=0,
             )
@@ -164,7 +164,7 @@ class ImageInference:
 
         return self.__get_inference_result(messages, expected_json_schema)
 
-    def __get_inference_result(self, messages, expected_json_schema, repeat_target=7):
+    def __get_inference_result(self, messages, expected_json_schema, repeat_target=5):
         repeat_count = 0
         repeated_results = []
         repeat_count_target = repeat_target * 3
