@@ -104,7 +104,6 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_URL=http://ollama:11435/api/generate
-      - MODEL_SERVER_URL=http://model-server:8001/infer
       - LLAMA_CPP_LOG_LEVEL=error
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
