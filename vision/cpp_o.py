@@ -21,7 +21,7 @@ class MiniCPMo26ChatHandler:
             raise ValueError("A valid clip_model_path is required for MiniCPM-o-2_6.")
         self.clip_model_path = clip_model_path
 
-    def __call__(self, messages: List[Dict]) -> ChatFormatterResponse:
+    def __call__(self, messages: List[Dict], llama=None) -> ChatFormatterResponse:
         prompt = ""
         images = []
 
@@ -30,7 +30,7 @@ class MiniCPMo26ChatHandler:
             content = msg["content"]
 
             if role == "system":
-                continue
+                continue  # system prompts not used
 
             if role == "user":
                 prompt += "<|user|>\n"
@@ -51,7 +51,6 @@ class MiniCPMo26ChatHandler:
         prompt += "<|assistant|>\n"
 
         return [{"prompt": prompt, "images": images}]
-
 
 class suppress_stdout(object):
     def __enter__(self):
