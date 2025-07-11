@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import List, Union, Dict
 from jsonz.validator import is_valid_json
 from jsonz.extractor import extract_json_from_str
-from llama_cpp.llama_chat_format import register_chat_format, ChatFormatterResponseItem
+from llama_cpp.llama_chat_format import register_chat_format, ChatFormatterResponse
 
 @register_chat_format("minicpm-o-2_6")
 class MiniCPMo26ChatHandler:
@@ -21,7 +21,7 @@ class MiniCPMo26ChatHandler:
             raise ValueError("A valid clip_model_path is required for MiniCPM-o-2_6.")
         self.clip_model_path = clip_model_path
 
-    def __call__(self, messages: List[Dict]) -> List[ChatFormatterResponseItem]:
+    def __call__(self, messages: List[Dict]) -> ChatFormatterResponse:
         prompt = ""
         images = []
 
@@ -30,7 +30,7 @@ class MiniCPMo26ChatHandler:
             content = msg["content"]
 
             if role == "system":
-                continue  # system prompts not used
+                continue
 
             if role == "user":
                 prompt += "<|user|>\n"
@@ -48,13 +48,9 @@ class MiniCPMo26ChatHandler:
             elif role == "assistant":
                 prompt += "<|assistant|>\n" + content + "\n"
 
-        prompt += "<|assistant|>\n"  # signal model to respond
+        prompt += "<|assistant|>\n"
 
-        return [ChatFormatterResponseItem(
-            prompt=prompt,
-            images=images
-        )]
-
+        return [{"prompt": prompt, "images": images}]
 
 
 class suppress_stdout(object):
