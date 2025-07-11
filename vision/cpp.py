@@ -183,7 +183,7 @@ class ImageInference:
 
         return result 
 
-    def __get_inference_result(self, messages, expected_json_schema, repeat_target=5):
+    def __get_inference_result(self, messages, expected_json_schema, repeat_target=3):
         repeat_count = 0
         repeated_results = []
         repeat_count_target = repeat_target * 3
