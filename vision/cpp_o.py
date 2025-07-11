@@ -16,26 +16,29 @@ from llama_cpp.llama_chat_format import register_chat_format, Llava15ChatHandler
 
 @register_chat_format("minicpm-o-2_6")
 class MiniCPMo26ChatHandler(Llava15ChatHandler):
-    DEFAULT_SYSTEM_MESSAGE = None  # o-2_6 doesn't use system prompts
+    DEFAULT_SYSTEM_MESSAGE = None
 
     CHAT_FORMAT = (
         "{% for message in messages %}"
         "{% if message['role'] == 'user' %}"
         "<|user|>\n"
+        "{% if message['content'] is iterable %}"
         "{% for part in message['content'] %}"
-            "{% if part.type == 'text' %}"
-                "{{ part.text }}\n"
-            "{% elif part.type == 'image_url' %}"
-                "<image>\n"
+            "{% if part['type'] == 'text' %}"
+                "{{ part['text'] }}\n"
+            "{% elif part['type'] == 'image_url' %}"
+                "{{ part['image_url']['url'] }}\n"
             "{% endif %}"
         "{% endfor %}"
+        "{% else %}"
+        "{{ message['content'] }}\n"
+        "{% endif %}"
         "{% elif message['role'] == 'assistant' %}"
         "<|assistant|>\n{{ message['content'] }}\n"
         "{% endif %}"
         "{% endfor %}"
         "<|assistant|>\n"
     )
-
 
 class suppress_stdout(object):
     def __enter__(self):
