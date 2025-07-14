@@ -139,7 +139,8 @@ class ImageInference:
                 img_data = f"file://{os.path.abspath(img)}"
             elif img.startswith(("http://", "https://")):
                 res = requests.get(img, timeout=10)
-                res.raise_for_status()
+                if res is None or res.status_code != 200: 
+                    continue
 
                 name_hash = hashlib.md5(img.encode()).hexdigest()
                 save_path = os.path.join(self.image_dir, f"{name_hash}.png")
